@@ -3,7 +3,7 @@ members = [
   "apps/api-gateway",
   "libs/config",
   "libs/domain-models",
-  "libs/event-contracts",
+  "libs/event-contracts", "services/ingest-service",
   "services/workflow-service",
 ]
 resolver = "2"
@@ -19,6 +19,7 @@ chrono = { version = "0.4", features = ["serde"] }
 dotenvy = "0.15"
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
+sqlx = { version = "0.8", features = ["chrono", "json", "postgres", "runtime-tokio-rustls", "uuid"] }
 tokio = { version = "1.47", features = ["full"] }
 tower-http = { version = "0.6", features = ["cors", "trace"] }
 tracing = "0.1"
