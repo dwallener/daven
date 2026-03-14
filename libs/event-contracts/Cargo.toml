@@ -1,0 +1,10 @@
+[package]
+name = "event-contracts"
+version.workspace = true
+edition.workspace = true
+
+[dependencies]
+chrono.workspace = true
+domain-models = { path = "../domain-models", package = "domain-models" }
+serde.workspace = true
+uuid.workspace = true

@@ -1,0 +1,800 @@
+tasks:
+- id: T001
+  title: Ticket T001
+  milestone: mvp-build
+  deps: []
+  acceptance_criteria:
+  - T001 implemented
+  - T001 tests pass
+  - T001 integrated
+  parallelizable: false
+- id: T002
+  title: Ticket T002
+  milestone: mvp-build
+  deps:
+  - T001
+  acceptance_criteria:
+  - T002 implemented
+  - T002 tests pass
+  - T002 integrated
+  parallelizable: false
+- id: T003
+  title: Ticket T003
+  milestone: mvp-build
+  deps:
+  - T002
+  acceptance_criteria:
+  - T003 implemented
+  - T003 tests pass
+  - T003 integrated
+  parallelizable: true
+- id: T004
+  title: Ticket T004
+  milestone: mvp-build
+  deps:
+  - T003
+  acceptance_criteria:
+  - T004 implemented
+  - T004 tests pass
+  - T004 integrated
+  parallelizable: false
+- id: T005
+  title: Ticket T005
+  milestone: mvp-build
+  deps:
+  - T004
+  acceptance_criteria:
+  - T005 implemented
+  - T005 tests pass
+  - T005 integrated
+  parallelizable: false
+- id: T006
+  title: Ticket T006
+  milestone: mvp-build
+  deps:
+  - T005
+  acceptance_criteria:
+  - T006 implemented
+  - T006 tests pass
+  - T006 integrated
+  parallelizable: true
+- id: T007
+  title: Ticket T007
+  milestone: mvp-build
+  deps:
+  - T006
+  acceptance_criteria:
+  - T007 implemented
+  - T007 tests pass
+  - T007 integrated
+  parallelizable: false
+- id: T008
+  title: Ticket T008
+  milestone: mvp-build
+  deps:
+  - T007
+  acceptance_criteria:
+  - T008 implemented
+  - T008 tests pass
+  - T008 integrated
+  parallelizable: false
+- id: T009
+  title: Ticket T009
+  milestone: mvp-build
+  deps:
+  - T008
+  acceptance_criteria:
+  - T009 implemented
+  - T009 tests pass
+  - T009 integrated
+  parallelizable: true
+- id: T010
+  title: Ticket T010
+  milestone: mvp-build
+  deps:
+  - T009
+  acceptance_criteria:
+  - T010 implemented
+  - T010 tests pass
+  - T010 integrated
+  parallelizable: false
+- id: T011
+  title: Ticket T011
+  milestone: mvp-build
+  deps:
+  - T010
+  acceptance_criteria:
+  - T011 implemented
+  - T011 tests pass
+  - T011 integrated
+  parallelizable: false
+- id: T012
+  title: Ticket T012
+  milestone: mvp-build
+  deps:
+  - T011
+  acceptance_criteria:
+  - T012 implemented
+  - T012 tests pass
+  - T012 integrated
+  parallelizable: true
+- id: T013
+  title: Ticket T013
+  milestone: mvp-build
+  deps:
+  - T012
+  acceptance_criteria:
+  - T013 implemented
+  - T013 tests pass
+  - T013 integrated
+  parallelizable: false
+- id: T014
+  title: Ticket T014
+  milestone: mvp-build
+  deps:
+  - T013
+  acceptance_criteria:
+  - T014 implemented
+  - T014 tests pass
+  - T014 integrated
+  parallelizable: false
+- id: T015
+  title: Ticket T015
+  milestone: mvp-build
+  deps:
+  - T014
+  acceptance_criteria:
+  - T015 implemented
+  - T015 tests pass
+  - T015 integrated
+  parallelizable: true
+- id: T016
+  title: Ticket T016
+  milestone: mvp-build
+  deps:
+  - T015
+  acceptance_criteria:
+  - T016 implemented
+  - T016 tests pass
+  - T016 integrated
+  parallelizable: false
+- id: T017
+  title: Ticket T017
+  milestone: mvp-build
+  deps:
+  - T016
+  acceptance_criteria:
+  - T017 implemented
+  - T017 tests pass
+  - T017 integrated
+  parallelizable: false
+- id: T018
+  title: Ticket T018
+  milestone: mvp-build
+  deps:
+  - T017
+  acceptance_criteria:
+  - T018 implemented
+  - T018 tests pass
+  - T018 integrated
+  parallelizable: true
+- id: T019
+  title: Ticket T019
+  milestone: mvp-build
+  deps:
+  - T018
+  acceptance_criteria:
+  - T019 implemented
+  - T019 tests pass
+  - T019 integrated
+  parallelizable: false
+- id: T020
+  title: Ticket T020
+  milestone: mvp-build
+  deps:
+  - T019
+  acceptance_criteria:
+  - T020 implemented
+  - T020 tests pass
+  - T020 integrated
+  parallelizable: false
+- id: T021
+  title: Ticket T021
+  milestone: mvp-build
+  deps:
+  - T020
+  acceptance_criteria:
+  - T021 implemented
+  - T021 tests pass
+  - T021 integrated
+  parallelizable: true
+- id: T022
+  title: Ticket T022
+  milestone: mvp-build
+  deps:
+  - T021
+  acceptance_criteria:
+  - T022 implemented
+  - T022 tests pass
+  - T022 integrated
+  parallelizable: false
+- id: T023
+  title: Ticket T023
+  milestone: mvp-build
+  deps:
+  - T022
+  acceptance_criteria:
+  - T023 implemented
+  - T023 tests pass
+  - T023 integrated
+  parallelizable: false
+- id: T024
+  title: Ticket T024
+  milestone: mvp-build
+  deps:
+  - T023
+  acceptance_criteria:
+  - T024 implemented
+  - T024 tests pass
+  - T024 integrated
+  parallelizable: true
+- id: T025
+  title: Ticket T025
+  milestone: mvp-build
+  deps:
+  - T024
+  acceptance_criteria:
+  - T025 implemented
+  - T025 tests pass
+  - T025 integrated
+  parallelizable: false
+- id: T026
+  title: Ticket T026
+  milestone: mvp-build
+  deps:
+  - T025
+  acceptance_criteria:
+  - T026 implemented
+  - T026 tests pass
+  - T026 integrated
+  parallelizable: false
+- id: T027
+  title: Ticket T027
+  milestone: mvp-build
+  deps:
+  - T026
+  acceptance_criteria:
+  - T027 implemented
+  - T027 tests pass
+  - T027 integrated
+  parallelizable: true
+- id: T028
+  title: Ticket T028
+  milestone: mvp-build
+  deps:
+  - T027
+  acceptance_criteria:
+  - T028 implemented
+  - T028 tests pass
+  - T028 integrated
+  parallelizable: false
+- id: T029
+  title: Ticket T029
+  milestone: mvp-build
+  deps:
+  - T028
+  acceptance_criteria:
+  - T029 implemented
+  - T029 tests pass
+  - T029 integrated
+  parallelizable: false
+- id: T030
+  title: Ticket T030
+  milestone: mvp-build
+  deps:
+  - T029
+  acceptance_criteria:
+  - T030 implemented
+  - T030 tests pass
+  - T030 integrated
+  parallelizable: true
+- id: T031
+  title: Ticket T031
+  milestone: mvp-build
+  deps:
+  - T030
+  acceptance_criteria:
+  - T031 implemented
+  - T031 tests pass
+  - T031 integrated
+  parallelizable: false
+- id: T032
+  title: Ticket T032
+  milestone: mvp-build
+  deps:
+  - T031
+  acceptance_criteria:
+  - T032 implemented
+  - T032 tests pass
+  - T032 integrated
+  parallelizable: false
+- id: T033
+  title: Ticket T033
+  milestone: mvp-build
+  deps:
+  - T032
+  acceptance_criteria:
+  - T033 implemented
+  - T033 tests pass
+  - T033 integrated
+  parallelizable: true
+- id: T034
+  title: Ticket T034
+  milestone: mvp-build
+  deps:
+  - T033
+  acceptance_criteria:
+  - T034 implemented
+  - T034 tests pass
+  - T034 integrated
+  parallelizable: false
+- id: T035
+  title: Ticket T035
+  milestone: mvp-build
+  deps:
+  - T034
+  acceptance_criteria:
+  - T035 implemented
+  - T035 tests pass
+  - T035 integrated
+  parallelizable: false
+- id: T036
+  title: Ticket T036
+  milestone: mvp-build
+  deps:
+  - T035
+  acceptance_criteria:
+  - T036 implemented
+  - T036 tests pass
+  - T036 integrated
+  parallelizable: true
+- id: T037
+  title: Ticket T037
+  milestone: mvp-build
+  deps:
+  - T036
+  acceptance_criteria:
+  - T037 implemented
+  - T037 tests pass
+  - T037 integrated
+  parallelizable: false
+- id: T038
+  title: Ticket T038
+  milestone: mvp-build
+  deps:
+  - T037
+  acceptance_criteria:
+  - T038 implemented
+  - T038 tests pass
+  - T038 integrated
+  parallelizable: false
+- id: T039
+  title: Ticket T039
+  milestone: mvp-build
+  deps:
+  - T038
+  acceptance_criteria:
+  - T039 implemented
+  - T039 tests pass
+  - T039 integrated
+  parallelizable: true
+- id: T040
+  title: Ticket T040
+  milestone: mvp-build
+  deps:
+  - T039
+  acceptance_criteria:
+  - T040 implemented
+  - T040 tests pass
+  - T040 integrated
+  parallelizable: false
+- id: T041
+  title: Ticket T041
+  milestone: mvp-build
+  deps:
+  - T040
+  acceptance_criteria:
+  - T041 implemented
+  - T041 tests pass
+  - T041 integrated
+  parallelizable: false
+- id: T042
+  title: Ticket T042
+  milestone: mvp-build
+  deps:
+  - T041
+  acceptance_criteria:
+  - T042 implemented
+  - T042 tests pass
+  - T042 integrated
+  parallelizable: true
+- id: T043
+  title: Ticket T043
+  milestone: mvp-build
+  deps:
+  - T042
+  acceptance_criteria:
+  - T043 implemented
+  - T043 tests pass
+  - T043 integrated
+  parallelizable: false
+- id: T044
+  title: Ticket T044
+  milestone: mvp-build
+  deps:
+  - T043
+  acceptance_criteria:
+  - T044 implemented
+  - T044 tests pass
+  - T044 integrated
+  parallelizable: false
+- id: T045
+  title: Ticket T045
+  milestone: mvp-build
+  deps:
+  - T044
+  acceptance_criteria:
+  - T045 implemented
+  - T045 tests pass
+  - T045 integrated
+  parallelizable: true
+- id: T046
+  title: Ticket T046
+  milestone: mvp-build
+  deps:
+  - T045
+  acceptance_criteria:
+  - T046 implemented
+  - T046 tests pass
+  - T046 integrated
+  parallelizable: false
+- id: T047
+  title: Ticket T047
+  milestone: mvp-build
+  deps:
+  - T046
+  acceptance_criteria:
+  - T047 implemented
+  - T047 tests pass
+  - T047 integrated
+  parallelizable: false
+- id: T048
+  title: Ticket T048
+  milestone: mvp-build
+  deps:
+  - T047
+  acceptance_criteria:
+  - T048 implemented
+  - T048 tests pass
+  - T048 integrated
+  parallelizable: true
+- id: T049
+  title: Ticket T049
+  milestone: mvp-build
+  deps:
+  - T048
+  acceptance_criteria:
+  - T049 implemented
+  - T049 tests pass
+  - T049 integrated
+  parallelizable: false
+- id: T050
+  title: Ticket T050
+  milestone: mvp-build
+  deps:
+  - T049
+  acceptance_criteria:
+  - T050 implemented
+  - T050 tests pass
+  - T050 integrated
+  parallelizable: false
+- id: T051
+  title: Ticket T051
+  milestone: mvp-build
+  deps:
+  - T050
+  acceptance_criteria:
+  - T051 implemented
+  - T051 tests pass
+  - T051 integrated
+  parallelizable: true
+- id: T052
+  title: Ticket T052
+  milestone: mvp-build
+  deps:
+  - T051
+  acceptance_criteria:
+  - T052 implemented
+  - T052 tests pass
+  - T052 integrated
+  parallelizable: false
+- id: T053
+  title: Ticket T053
+  milestone: mvp-build
+  deps:
+  - T052
+  acceptance_criteria:
+  - T053 implemented
+  - T053 tests pass
+  - T053 integrated
+  parallelizable: false
+- id: T054
+  title: Ticket T054
+  milestone: mvp-build
+  deps:
+  - T053
+  acceptance_criteria:
+  - T054 implemented
+  - T054 tests pass
+  - T054 integrated
+  parallelizable: true
+- id: T055
+  title: Ticket T055
+  milestone: mvp-build
+  deps:
+  - T054
+  acceptance_criteria:
+  - T055 implemented
+  - T055 tests pass
+  - T055 integrated
+  parallelizable: false
+- id: T056
+  title: Ticket T056
+  milestone: mvp-build
+  deps:
+  - T055
+  acceptance_criteria:
+  - T056 implemented
+  - T056 tests pass
+  - T056 integrated
+  parallelizable: false
+- id: T057
+  title: Ticket T057
+  milestone: mvp-build
+  deps:
+  - T056
+  acceptance_criteria:
+  - T057 implemented
+  - T057 tests pass
+  - T057 integrated
+  parallelizable: true
+- id: T058
+  title: Ticket T058
+  milestone: mvp-build
+  deps:
+  - T057
+  acceptance_criteria:
+  - T058 implemented
+  - T058 tests pass
+  - T058 integrated
+  parallelizable: false
+- id: T059
+  title: Ticket T059
+  milestone: mvp-build
+  deps:
+  - T058
+  acceptance_criteria:
+  - T059 implemented
+  - T059 tests pass
+  - T059 integrated
+  parallelizable: false
+- id: T060
+  title: Ticket T060
+  milestone: mvp-build
+  deps:
+  - T059
+  acceptance_criteria:
+  - T060 implemented
+  - T060 tests pass
+  - T060 integrated
+  parallelizable: true
+- id: T061
+  title: Ticket T061
+  milestone: mvp-build
+  deps:
+  - T060
+  acceptance_criteria:
+  - T061 implemented
+  - T061 tests pass
+  - T061 integrated
+  parallelizable: false
+- id: T062
+  title: Ticket T062
+  milestone: mvp-build
+  deps:
+  - T061
+  acceptance_criteria:
+  - T062 implemented
+  - T062 tests pass
+  - T062 integrated
+  parallelizable: false
+- id: T063
+  title: Ticket T063
+  milestone: mvp-build
+  deps:
+  - T062
+  acceptance_criteria:
+  - T063 implemented
+  - T063 tests pass
+  - T063 integrated
+  parallelizable: true
+- id: T064
+  title: Ticket T064
+  milestone: mvp-build
+  deps:
+  - T063
+  acceptance_criteria:
+  - T064 implemented
+  - T064 tests pass
+  - T064 integrated
+  parallelizable: false
+- id: T065
+  title: Ticket T065
+  milestone: mvp-build
+  deps:
+  - T064
+  acceptance_criteria:
+  - T065 implemented
+  - T065 tests pass
+  - T065 integrated
+  parallelizable: false
+- id: T066
+  title: Ticket T066
+  milestone: mvp-build
+  deps:
+  - T065
+  acceptance_criteria:
+  - T066 implemented
+  - T066 tests pass
+  - T066 integrated
+  parallelizable: true
+- id: T067
+  title: Ticket T067
+  milestone: mvp-build
+  deps:
+  - T066
+  acceptance_criteria:
+  - T067 implemented
+  - T067 tests pass
+  - T067 integrated
+  parallelizable: false
+- id: T068
+  title: Ticket T068
+  milestone: mvp-build
+  deps:
+  - T067
+  acceptance_criteria:
+  - T068 implemented
+  - T068 tests pass
+  - T068 integrated
+  parallelizable: false
+- id: T069
+  title: Ticket T069
+  milestone: mvp-build
+  deps:
+  - T068
+  acceptance_criteria:
+  - T069 implemented
+  - T069 tests pass
+  - T069 integrated
+  parallelizable: true
+- id: T070
+  title: Ticket T070
+  milestone: mvp-build
+  deps:
+  - T069
+  acceptance_criteria:
+  - T070 implemented
+  - T070 tests pass
+  - T070 integrated
+  parallelizable: false
+- id: T071
+  title: Ticket T071
+  milestone: mvp-build
+  deps:
+  - T070
+  acceptance_criteria:
+  - T071 implemented
+  - T071 tests pass
+  - T071 integrated
+  parallelizable: false
+- id: T072
+  title: Ticket T072
+  milestone: mvp-build
+  deps:
+  - T071
+  acceptance_criteria:
+  - T072 implemented
+  - T072 tests pass
+  - T072 integrated
+  parallelizable: true
+- id: T073
+  title: Ticket T073
+  milestone: mvp-build
+  deps:
+  - T072
+  acceptance_criteria:
+  - T073 implemented
+  - T073 tests pass
+  - T073 integrated
+  parallelizable: false
+- id: T074
+  title: Ticket T074
+  milestone: mvp-build
+  deps:
+  - T073
+  acceptance_criteria:
+  - T074 implemented
+  - T074 tests pass
+  - T074 integrated
+  parallelizable: false
+- id: T075
+  title: Ticket T075
+  milestone: mvp-build
+  deps:
+  - T074
+  acceptance_criteria:
+  - T075 implemented
+  - T075 tests pass
+  - T075 integrated
+  parallelizable: true
+- id: T076
+  title: Ticket T076
+  milestone: mvp-build
+  deps:
+  - T075
+  acceptance_criteria:
+  - T076 implemented
+  - T076 tests pass
+  - T076 integrated
+  parallelizable: false
+- id: T077
+  title: Ticket T077
+  milestone: mvp-build
+  deps:
+  - T076
+  acceptance_criteria:
+  - T077 implemented
+  - T077 tests pass
+  - T077 integrated
+  parallelizable: false
+- id: T078
+  title: Ticket T078
+  milestone: mvp-build
+  deps:
+  - T077
+  acceptance_criteria:
+  - T078 implemented
+  - T078 tests pass
+  - T078 integrated
+  parallelizable: true
+- id: T079
+  title: Ticket T079
+  milestone: mvp-build
+  deps:
+  - T078
+  acceptance_criteria:
+  - T079 implemented
+  - T079 tests pass
+  - T079 integrated
+  parallelizable: false
+- id: T080
+  title: Ticket T080
+  milestone: mvp-build
+  deps:
+  - T079
+  acceptance_criteria:
+  - T080 implemented
+  - T080 tests pass
+  - T080 integrated
+  parallelizable: false
