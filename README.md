@@ -12,6 +12,7 @@ Current implemented scope:
 - Native PostgreSQL-backed execution adapter
 - Native PostgreSQL-backed assessment service
 - React + TypeScript workflow board that reads the live APIs
+- Frontend board supports approval, dispatch, completion, and BDA submission from the UI
 
 ## Workspace layout
 
@@ -128,6 +129,7 @@ VITE_ASSET_API_URL=http://127.0.0.1:3004
 VITE_RECOMMENDATION_API_URL=http://127.0.0.1:3005
 VITE_PLANNING_API_URL=http://127.0.0.1:3006
 VITE_EXECUTION_API_URL=http://127.0.0.1:3007
+VITE_ASSESSMENT_API_URL=http://127.0.0.1:3008
 ```
 
 Example:
@@ -139,6 +141,7 @@ VITE_ASSET_API_URL=http://127.0.0.1:3004 \
 VITE_RECOMMENDATION_API_URL=http://127.0.0.1:3005 \
 VITE_PLANNING_API_URL=http://127.0.0.1:3006 \
 VITE_EXECUTION_API_URL=http://127.0.0.1:3007 \
+VITE_ASSESSMENT_API_URL=http://127.0.0.1:3008 \
 npm run dev
 ```
 

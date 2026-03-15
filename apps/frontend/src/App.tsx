@@ -79,6 +79,18 @@ type Task = {
   time_on_target: string | null;
 };
 
+type Assessment = {
+  id: string;
+  task_id: string;
+  target_id: string;
+  result: "DESTROYED" | "DAMAGED" | "NO_EFFECT" | "INCONCLUSIVE";
+  confidence: number;
+  assessed_by: string;
+  created_at: string;
+  notes: string | null;
+  media_refs: string[];
+};
+
 const workflowApiUrl =
   import.meta.env.VITE_WORKFLOW_API_URL ?? "http://127.0.0.1:3003";
 const assetApiUrl =
@@ -89,6 +101,8 @@ const planningApiUrl =
   import.meta.env.VITE_PLANNING_API_URL ?? "http://127.0.0.1:3006";
 const executionApiUrl =
   import.meta.env.VITE_EXECUTION_API_URL ?? "http://127.0.0.1:3007";
+const assessmentApiUrl =
+  import.meta.env.VITE_ASSESSMENT_API_URL ?? "http://127.0.0.1:3008";
 
 async function fetchJson<T>(url: string): Promise<T> {
   const response = await fetch(url);
@@ -115,15 +129,23 @@ export function App() {
   const [selectedTargetId, setSelectedTargetId] = useState<string | null>(null);
   const [recommendation, setRecommendation] = useState<Recommendation | null>(null);
   const [tasks, setTasks] = useState<Task[]>([]);
+  const [assessments, setAssessments] = useState<Assessment[]>([]);
   const [boardError, setBoardError] = useState<string | null>(null);
   const [assetError, setAssetError] = useState<string | null>(null);
   const [recommendationError, setRecommendationError] = useState<string | null>(null);
   const [taskError, setTaskError] = useState<string | null>(null);
+  const [assessmentError, setAssessmentError] = useState<string | null>(null);
   const [loadingBoard, setLoadingBoard] = useState(true);
   const [loadingAssets, setLoadingAssets] = useState(true);
   const [loadingRecommendation, setLoadingRecommendation] = useState(false);
   const [loadingTasks, setLoadingTasks] = useState(false);
+  const [loadingAssessments, setLoadingAssessments] = useState(false);
   const [submittingTask, setSubmittingTask] = useState(false);
+  const [assessmentResult, setAssessmentResult] =
+    useState<Assessment["result"]>("DESTROYED");
+  const [assessmentConfidence, setAssessmentConfidence] = useState("0.92");
+  const [assessmentNotes, setAssessmentNotes] = useState("");
+  const [assessmentMediaRefs, setAssessmentMediaRefs] = useState("clip_001");
 
   async function loadBoard() {
     setLoadingBoard(true);
@@ -173,6 +195,23 @@ export function App() {
     }
   }
 
+  async function loadAssessments(targetId: string) {
+    setLoadingAssessments(true);
+    setAssessmentError(null);
+    try {
+      const data = await fetchJson<Assessment[]>(
+        `${assessmentApiUrl}/targets/${targetId}/assessments`,
+      );
+      setAssessments(data);
+    } catch (error) {
+      setAssessmentError(
+        error instanceof Error ? error.message : "Assessment request failed",
+      );
+    } finally {
+      setLoadingAssessments(false);
+    }
+  }
+
   useEffect(() => {
     void loadBoard();
     void loadAssets();
@@ -182,6 +221,7 @@ export function App() {
     if (!selectedTargetId) {
       setRecommendation(null);
       setTasks([]);
+      setAssessments([]);
       return;
     }
 
@@ -204,6 +244,7 @@ export function App() {
 
     void loadRecommendation();
     void loadTasks(selectedTargetId);
+    void loadAssessments(selectedTargetId);
   }, [selectedTargetId]);
 
   const allTargets = boardData ? Object.values(boardData.columns).flat() : [];
@@ -261,10 +302,48 @@ export function App() {
       }
       if (selectedTarget) {
         await loadTasks(selectedTarget.id);
+        await loadAssessments(selectedTarget.id);
       }
       await loadBoard();
     } catch (error) {
       setTaskError(error instanceof Error ? error.message : `Task ${action} failed`);
+    } finally {
+      setSubmittingTask(false);
+    }
+  }
+
+  async function submitAssessment() {
+    if (!currentTask || !selectedTarget) {
+      return;
+    }
+
+    setSubmittingTask(true);
+    setAssessmentError(null);
+    try {
+      const confidence = Number.parseFloat(assessmentConfidence);
+      const response = await fetch(`${assessmentApiUrl}/tasks/${currentTask.id}/assess`, {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          result: assessmentResult,
+          confidence,
+          notes: assessmentNotes.trim() || null,
+          media_refs: assessmentMediaRefs
+            .split(",")
+            .map((value) => value.trim())
+            .filter(Boolean),
+          actor: "operator",
+        }),
+      });
+      if (!response.ok) {
+        throw new Error(`${response.status} ${response.statusText}`);
+      }
+      await loadAssessments(selectedTarget.id);
+      await loadBoard();
+    } catch (error) {
+      setAssessmentError(
+        error instanceof Error ? error.message : "Assessment submission failed",
+      );
     } finally {
       setSubmittingTask(false);
     }
@@ -308,8 +387,9 @@ export function App() {
           <h1>Workflow, pairing, and asset context on one live screen.</h1>
           <p className="lede">
             This board is reading the workflow, asset, recommendation,
-            planning, and execution APIs directly. The current MVP path runs
-            from detection to nomination to pairing to approved task execution.
+            planning, execution, and assessment APIs directly. The current
+            MVP path runs from detection to nomination to pairing to approved
+            task execution and BDA closeout.
           </p>
         </div>
         <dl className="endpoint-grid">
@@ -332,6 +412,10 @@ export function App() {
           <div>
             <dt>Execution</dt>
             <dd>{executionApiUrl}</dd>
+          </div>
+          <div>
+            <dt>Assessment</dt>
+            <dd>{assessmentApiUrl}</dd>
           </div>
         </dl>
       </section>
@@ -565,12 +649,122 @@ export function App() {
                     Complete Task
                   </button>
                 </div>
+                {currentTask.status === "COMPLETED" ? (
+                  <div className="assessment-panel">
+                    <div className="panel-header compact">
+                      <div>
+                        <p className="section-kicker">Post-Action Assessment</p>
+                        <h2>BDA Submission</h2>
+                      </div>
+                    </div>
+                    {assessmentError ? (
+                      <p className="error-text">{assessmentError}</p>
+                    ) : null}
+                    <div className="form-grid">
+                      <label className="field">
+                        <span className="detail-label">Result</span>
+                        <select
+                          value={assessmentResult}
+                          onChange={(event) =>
+                            setAssessmentResult(event.target.value as Assessment["result"])
+                          }
+                        >
+                          <option value="DESTROYED">Destroyed</option>
+                          <option value="DAMAGED">Damaged</option>
+                          <option value="NO_EFFECT">No Effect</option>
+                          <option value="INCONCLUSIVE">Inconclusive</option>
+                        </select>
+                      </label>
+                      <label className="field">
+                        <span className="detail-label">Confidence</span>
+                        <input
+                          max="1"
+                          min="0"
+                          onChange={(event) => setAssessmentConfidence(event.target.value)}
+                          step="0.01"
+                          type="number"
+                          value={assessmentConfidence}
+                        />
+                      </label>
+                      <label className="field form-span-2">
+                        <span className="detail-label">Media Refs</span>
+                        <input
+                          onChange={(event) => setAssessmentMediaRefs(event.target.value)}
+                          placeholder="clip_001, pass_2_frame_87"
+                          type="text"
+                          value={assessmentMediaRefs}
+                        />
+                      </label>
+                      <label className="field form-span-2">
+                        <span className="detail-label">Notes</span>
+                        <textarea
+                          onChange={(event) => setAssessmentNotes(event.target.value)}
+                          placeholder="confirmed from follow-up sensor pass"
+                          rows={3}
+                          value={assessmentNotes}
+                        />
+                      </label>
+                    </div>
+                    <div className="action-row">
+                      <button
+                        className="action-button"
+                        disabled={submittingTask || selectedTarget.status !== "PENDING_BDA"}
+                        onClick={() => void submitAssessment()}
+                        type="button"
+                      >
+                        Submit Assessment
+                      </button>
+                    </div>
+                  </div>
+                ) : null}
               </div>
             ) : (
               <p className="empty-text">
                 No task has been proposed for the selected target yet.
               </p>
             )}
+          </section>
+
+          <section className="detail-card">
+            <header className="panel-header compact">
+              <div>
+                <p className="section-kicker">Assessment History</p>
+                <h2>BDA Records</h2>
+              </div>
+              <span className="status-pill subtle">
+                {loadingAssessments ? "Loading BDA" : assessments.length}
+              </span>
+            </header>
+            {assessmentError ? <p className="error-text">{assessmentError}</p> : null}
+            <div className="recommendation-list">
+              {assessments.map((assessment) => (
+                <article className="recommendation-card" key={assessment.id}>
+                  <div className="target-card-top">
+                    <p>{assessment.result.replaceAll("_", " ")}</p>
+                    <span>{assessment.confidence.toFixed(2)}</span>
+                  </div>
+                  <p className="target-meta">By {assessment.assessed_by}</p>
+                  <p className="target-meta">{formatTimestamp(assessment.created_at)}</p>
+                  {assessment.notes ? (
+                    <p className="target-meta">{assessment.notes}</p>
+                  ) : null}
+                  {assessment.media_refs.length ? (
+                    <div className="label-row">
+                      {assessment.media_refs.map((mediaRef) => (
+                        <span className="label-pill" key={mediaRef}>
+                          {mediaRef}
+                        </span>
+                      ))}
+                    </div>
+                  ) : null}
+                </article>
+              ))}
+              {!assessments.length && !loadingAssessments ? (
+                <p className="empty-text">
+                  No assessments recorded for the selected target yet.
+                </p>
+              ) : null}
+            </div>
           </section>
 
           <section className="detail-card">
