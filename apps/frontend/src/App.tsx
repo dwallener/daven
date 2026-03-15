@@ -109,6 +109,15 @@ const executionApiUrl =
   import.meta.env.VITE_EXECUTION_API_URL ?? "http://127.0.0.1:3007";
 const assessmentApiUrl =
   import.meta.env.VITE_ASSESSMENT_API_URL ?? "http://127.0.0.1:3008";
+const mapCenterLng = Number.parseFloat(
+  import.meta.env.VITE_MAP_CENTER_LNG ?? "50.324",
+);
+const mapCenterLat = Number.parseFloat(
+  import.meta.env.VITE_MAP_CENTER_LAT ?? "29.238",
+);
+const mapRadiusDegrees = Number.parseFloat(
+  import.meta.env.VITE_MAP_RADIUS_DEGREES ?? "0.18",
+);
 
 async function fetchJson<T>(url: string): Promise<T> {
   const response = await fetch(url);
@@ -127,6 +136,76 @@ function formatTimestamp(value: string) {
 
 function formatCoordinates(location: PointGeometry) {
   return `${location.coordinates[1].toFixed(3)}, ${location.coordinates[0].toFixed(3)}`;
+}
+
+function describeMissionPhase(target: Target | null) {
+  if (!target) {
+    return "No target selected";
+  }
+
+  switch (target.status) {
+    case "NOMINATED":
+    case "TRIAGED":
+      return "Deliberation";
+    case "PENDING_PAIRING":
+      return "Pairing";
+    case "PAIRED":
+    case "PLAN_DRAFTED":
+    case "PENDING_APPROVAL":
+      return "Planning";
+    case "APPROVED":
+    case "IN_EXECUTION":
+      return "Execution";
+    case "PENDING_BDA":
+      return "Assessment";
+    case "ASSESSED_COMPLETE":
+      return "Closed";
+    default:
+      return "Review";
+  }
+}
+
+function describeNextAction(target: Target | null, task: Task | null) {
+  if (!target) {
+    return "Select a target to continue.";
+  }
+
+  if (!task) {
+    return "Propose a task from the top recommendation.";
+  }
+
+  if (task.approval_status === "REQUIRED") {
+    return "Approve or reject the proposed task.";
+  }
+
+  if (task.status === "APPROVED") {
+    return "Dispatch the approved task.";
+  }
+
+  if (task.status === "IN_EXECUTION") {
+    return "Mark execution complete when effects are observed.";
+  }
+
+  if (task.status === "COMPLETED" && target.status === "PENDING_BDA") {
+    return "Submit BDA to close the target or keep it pending.";
+  }
+
+  if (target.status === "ASSESSED_COMPLETE") {
+    return "Target closed. Review the timeline and evidence.";
+  }
+
+  return "Review target state and continue the workflow.";
+}
+
+function projectToMap(location: PointGeometry) {
+  const [lng, lat] = location.coordinates;
+  const x = ((lng - mapCenterLng) / mapRadiusDegrees + 1) * 50;
+  const y = (1 - (lat - mapCenterLat) / mapRadiusDegrees) * 50;
+
+  return {
+    x: Math.min(96, Math.max(4, x)),
+    y: Math.min(96, Math.max(4, y)),
+  };
 }
 
 export function App() {
@@ -305,6 +384,24 @@ export function App() {
     allTargets.find((target) => target.id === selectedTargetId) ?? null;
   const assetMap = new Map(assets.map((asset) => [asset.id, asset]));
   const currentTask = tasks[0] ?? null;
+  const missionPhase = describeMissionPhase(selectedTarget);
+  const nextAction = describeNextAction(selectedTarget, currentTask);
+  const mapTargets = allTargets.map((target) => ({
+    id: target.id,
+    kind: "target" as const,
+    label: target.title,
+    highlighted: target.id === selectedTargetId,
+    status: target.status,
+    point: projectToMap(target.location),
+  }));
+  const mapAssets = assets.slice(0, 8).map((asset) => ({
+    id: asset.id,
+    kind: "asset" as const,
+    label: asset.callsign,
+    highlighted: currentTask?.asset_ids.includes(asset.id) ?? false,
+    status: asset.availability,
+    point: projectToMap(asset.location),
+  }));
 
   async function proposeTask() {
     if (!selectedTarget || !recommendation?.candidates[0]) {
@@ -481,6 +578,82 @@ export function App() {
         </div>
       </section>
 
+      <section className="ops-grid">
+        <section className="detail-card map-panel">
+          <header className="panel-header compact">
+            <div>
+              <p className="section-kicker">Operations Map</p>
+              <h2>Kharg Island Overlay</h2>
+            </div>
+            <span className="status-pill subtle">{missionPhase}</span>
+          </header>
+          <div className="map-frame">
+            <div className="map-backdrop" />
+            <div className="map-ring map-ring-a" />
+            <div className="map-ring map-ring-b" />
+            <div className="map-crosshair map-crosshair-h" />
+            <div className="map-crosshair map-crosshair-v" />
+            <div className="map-center-label">
+              Centered on Kharg Island
+              <span>{mapCenterLat.toFixed(3)}, {mapCenterLng.toFixed(3)}</span>
+            </div>
+            {mapTargets.map((item) => (
+              <button
+                className={`map-marker ${item.kind}${item.highlighted ? " highlighted" : ""}`}
+                key={item.id}
+                onClick={() => setSelectedTargetId(item.id)}
+                style={{ left: `${item.point.x}%`, top: `${item.point.y}%` }}
+                type="button"
+              >
+                <span>{item.label}</span>
+              </button>
+            ))}
+            {mapAssets.map((item) => (
+              <div
+                className={`map-marker ${item.kind}${item.highlighted ? " highlighted" : ""}`}
+                key={item.id}
+                style={{ left: `${item.point.x}%`, top: `${item.point.y}%` }}
+              >
+                <span>{item.label}</span>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        <section className="detail-card briefing-panel">
+          <header className="panel-header compact">
+            <div>
+              <p className="section-kicker">Mission Brief</p>
+              <h2>{selectedTarget?.title ?? "Awaiting selection"}</h2>
+            </div>
+          </header>
+          <div className="brief-grid">
+            <div className="brief-block">
+              <p className="detail-label">Phase</p>
+              <p>{missionPhase}</p>
+            </div>
+            <div className="brief-block">
+              <p className="detail-label">Priority</p>
+              <p>{selectedTarget ? `P${selectedTarget.priority}` : "N/A"}</p>
+            </div>
+            <div className="brief-block brief-span">
+              <p className="detail-label">Next Action</p>
+              <p>{nextAction}</p>
+            </div>
+            <div className="brief-block brief-span">
+              <p className="detail-label">Current Focus</p>
+              <p>
+                {selectedTarget
+                  ? `${selectedTarget.classification ?? "Unknown"} target near ${formatCoordinates(
+                      selectedTarget.location,
+                    )}`
+                  : "Choose a target on the board or map to inspect it."}
+              </p>
+            </div>
+          </div>
+        </section>
+      </section>
+
       <section className="main-grid">
         <section className="board-panel">
           <header className="panel-header">
@@ -549,32 +722,74 @@ export function App() {
                 <p className="section-kicker">Selected Target</p>
                 <h2>{selectedTarget?.title ?? "No target selected"}</h2>
               </div>
+              <span className="status-pill subtle">{missionPhase}</span>
             </header>
             {selectedTarget ? (
-              <div className="detail-grid">
-                <div>
+              <>
+                <div className="brief-banner">
+                  <div>
+                    <p className="detail-label">Next Action</p>
+                    <p>{nextAction}</p>
+                  </div>
+                </div>
+                <div className="detail-grid">
+                  <div>
                   <p className="detail-label">Status</p>
                   <p>{selectedTarget.status}</p>
-                </div>
-                <div>
+                  </div>
+                  <div>
                   <p className="detail-label">Classification</p>
                   <p>{selectedTarget.classification ?? "Unknown"}</p>
-                </div>
-                <div>
+                  </div>
+                  <div>
                   <p className="detail-label">Location</p>
                   <p>{formatCoordinates(selectedTarget.location)}</p>
-                </div>
-                <div>
+                  </div>
+                  <div>
                   <p className="detail-label">Source Detection</p>
                   <p>{selectedTarget.source_detection_id ?? "Manual"}</p>
-                </div>
-                <div>
+                  </div>
+                  <div>
                   <p className="detail-label">Updated</p>
                   <p>{formatTimestamp(selectedTarget.updated_at)}</p>
+                  </div>
                 </div>
-              </div>
+              </>
             ) : (
               <p className="empty-text">Pick a target card to inspect its live details.</p>
+            )}
+          </section>
+
+          <section className="detail-card">
+            <header className="panel-header compact">
+              <div>
+                <p className="section-kicker">Target Timeline</p>
+                <h2>State Narrative</h2>
+              </div>
+              <span className="status-pill subtle">
+                {selectedTarget?.state_history.length ?? 0}
+              </span>
+            </header>
+            {selectedTarget?.state_history.length ? (
+              <div className="timeline-list">
+                {selectedTarget.state_history
+                  .slice()
+                  .reverse()
+                  .map((entry, index) => (
+                    <article className="timeline-item" key={`${entry.at}-${index}`}>
+                      <div className="timeline-dot" />
+                      <div>
+                        <p className="timeline-title">
+                          {entry.from ? `${entry.from} -> ${entry.to}` : entry.to}
+                        </p>
+                        <p className="target-meta">By {entry.by}</p>
+                        <p className="target-meta">{formatTimestamp(entry.at)}</p>
+                      </div>
+                    </article>
+                  ))}
+              </div>
+            ) : (
+              <p className="empty-text">No target history is available yet.</p>
             )}
           </section>
 

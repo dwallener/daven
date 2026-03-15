@@ -13,6 +13,7 @@ Current implemented scope:
 - Native PostgreSQL-backed assessment service
 - React + TypeScript workflow board that reads the live APIs
 - Frontend board supports approval, dispatch, completion, and BDA submission from the UI
+- Demo UI includes a lightweight operations map centered on Kharg Island by default
 
 ## Workspace layout
 
@@ -160,6 +161,9 @@ VITE_RECOMMENDATION_API_URL=http://127.0.0.1:3005
 VITE_PLANNING_API_URL=http://127.0.0.1:3006
 VITE_EXECUTION_API_URL=http://127.0.0.1:3007
 VITE_ASSESSMENT_API_URL=http://127.0.0.1:3008
+VITE_MAP_CENTER_LNG=50.324
+VITE_MAP_CENTER_LAT=29.238
+VITE_MAP_RADIUS_DEGREES=0.18
 ```
 
 Example:
