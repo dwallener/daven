@@ -10,6 +10,7 @@ Current implemented scope:
 - Native PostgreSQL-backed recommendation service
 - Native PostgreSQL-backed planning service
 - Native PostgreSQL-backed execution adapter
+- Native PostgreSQL-backed assessment service
 - React + TypeScript workflow board that reads the live APIs
 
 ## Workspace layout
@@ -25,6 +26,7 @@ Current implemented scope:
 - `services/recommendation-service`: target-to-asset ranking
 - `services/planning-service`: task proposal and approval flow
 - `services/execution-adapter`: dispatch and execution state updates
+- `services/assessment-service`: BDA submission and target closeout
 - `infra/db/migrations`: bootstrap schema
 
 ## Prerequisites
@@ -91,6 +93,12 @@ Execution adapter on `3007`:
 APP_PORT=3007 DATABASE_URL='postgresql:///daven' cargo run -p execution-adapter
 ```
 
+Assessment service on `3008`:
+
+```zsh
+APP_PORT=3008 DATABASE_URL='postgresql:///daven' cargo run -p assessment-service
+```
+
 If a service says `Address already in use`, another copy is already running on that port.
 
 ## Run the frontend
@@ -110,6 +118,7 @@ By default the frontend expects:
 - recommendation API: `http://127.0.0.1:3005`
 - planning API: `http://127.0.0.1:3006`
 - execution API: `http://127.0.0.1:3007`
+- assessment API: `http://127.0.0.1:3008`
 
 You can override those with Vite env vars:
 
@@ -135,7 +144,7 @@ npm run dev
 
 ## First end-to-end test
 
-1. Start the six backend services.
+1. Start the seven backend services.
 2. Create a detection:
 
 ```zsh
@@ -198,7 +207,21 @@ curl -s -X POST http://127.0.0.1:3007/tasks/TASK_ID/complete \
   -d '{"actor":"damir00","notes":"task complete"}'
 ```
 
-10. Open the frontend and inspect the live board.
+10. Submit BDA:
+
+```zsh
+curl -s -X POST http://127.0.0.1:3008/tasks/TASK_ID/assess \
+  -H 'content-type: application/json' \
+  -d '{"result":"DESTROYED","confidence":0.92,"notes":"confirmed from follow-up sensor pass","media_refs":["clip_001"],"actor":"damir00"}'
+```
+
+11. Inspect assessments for the target:
+
+```zsh
+curl -s http://127.0.0.1:3008/targets/TARGET_ID/assessments
+```
+
+12. Open the frontend and inspect the live board.
 
 ## Implemented backend slices
 
@@ -245,8 +268,16 @@ curl -s -X POST http://127.0.0.1:3007/tasks/TASK_ID/complete \
 - `POST /tasks/{id}/dispatch`
 - `POST /tasks/{id}/complete`
 
+### Assessment
+
+- `GET /health`
+- `GET /assessments/{id}`
+- `POST /tasks/{id}/assess`
+- `GET /targets/{id}/assessments`
+
 ## Current notes
 
 - The current schema uses plain `longitude` and `latitude` columns, not PostGIS geometry types.
 - Docker files still exist as stubs, but the current recommended path is native local execution.
 - `apps/frontend` is now a real live board, not a placeholder shell.
+- Non-`INCONCLUSIVE` assessments close the target to `ASSESSED_COMPLETE`; `INCONCLUSIVE` assessments are stored but leave the target in `PENDING_BDA`.

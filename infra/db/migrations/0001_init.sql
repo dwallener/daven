@@ -84,15 +84,6 @@ create table if not exists recommendation_candidates (
   explanation jsonb not null default '{}'::jsonb
 );
 
-create table if not exists task_execution_updates (
-  id bigserial primary key,
-  task_id text not null references tasks(id),
-  execution_status text not null,
-  actor text not null,
-  notes text,
-  created_at timestamptz not null default now()
-);
-
 create table if not exists tasks (
   id text primary key,
   target_id text not null references targets(id),
@@ -111,15 +102,32 @@ alter table tasks add column if not exists created_by text not null default 'sys
 alter table tasks add column if not exists created_at timestamptz not null default now();
 alter table tasks add column if not exists updated_at timestamptz not null default now();
 
+create table if not exists task_execution_updates (
+  id bigserial primary key,
+  task_id text not null references tasks(id),
+  execution_status text not null,
+  actor text not null,
+  notes text,
+  created_at timestamptz not null default now()
+);
+
 create table if not exists assessments (
   id text primary key,
   task_id text not null references tasks(id),
   target_id text not null references targets(id),
   result text not null,
   confidence real not null,
+  assessed_by text not null default 'system',
   notes text,
+  media_refs jsonb not null default '[]'::jsonb,
   created_at timestamptz not null
 );
+
+alter table assessments add column if not exists assessed_by text not null default 'system';
+alter table assessments add column if not exists media_refs jsonb not null default '[]'::jsonb;
+
+create index if not exists idx_assessments_task on assessments(task_id);
+create index if not exists idx_assessments_target on assessments(target_id);
 
 create table if not exists media_objects (
   id text primary key,

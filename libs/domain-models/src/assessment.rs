@@ -8,8 +8,10 @@ pub struct Assessment {
     pub target_id: String,
     pub result: AssessmentResult,
     pub confidence: f32,
+    pub assessed_by: String,
     pub created_at: DateTime<Utc>,
     pub notes: Option<String>,
+    pub media_refs: Vec<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
