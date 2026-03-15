@@ -161,6 +161,7 @@ button {
 .ops-grid {
   display: grid;
   gap: 1.5rem;
+  justify-items: center;
 }
 
 .board-panel,
@@ -173,9 +174,19 @@ button {
   overflow: hidden;
 }
 
+.map-panel {
+  width: min(100%, 78rem);
+}
+
+.briefing-panel {
+  width: min(100%, 78rem);
+}
+
 .map-frame {
   position: relative;
-  min-height: 40rem;
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  min-height: 0;
   overflow: hidden;
   border-radius: 26px;
   background:
@@ -685,7 +696,7 @@ button {
   }
 
   .ops-grid {
-    grid-template-columns: minmax(0, 1.95fr) minmax(20rem, 0.85fr);
+    grid-template-columns: 1fr;
     align-items: stretch;
   }
 
