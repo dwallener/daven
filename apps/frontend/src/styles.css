@@ -162,6 +162,7 @@ button {
 .left-column {
   display: grid;
   gap: 1.5rem;
+  width: 100%;
 }
 
 .board-panel,
@@ -175,7 +176,15 @@ button {
 }
 
 .map-panel {
-  width: min(100%, 78rem);
+  width: 100%;
+}
+
+.right-column {
+  width: 100%;
+}
+
+.right-banner h1 {
+  font-size: clamp(1.8rem, 3.2vw, 2.9rem);
 }
 
 .map-frame {
@@ -696,6 +705,6 @@ button {
   }
 
   .content-grid {
-    grid-template-columns: minmax(0, 1.7fr) minmax(24rem, 0.85fr);
+    grid-template-columns: minmax(0, 2.6fr) minmax(20rem, 0.65fr);
   }
 }

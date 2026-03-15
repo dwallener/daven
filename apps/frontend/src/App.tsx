@@ -551,21 +551,6 @@ export function App() {
 
   return (
     <main className="app-shell">
-      <section className="title-bar detail-card">
-        <div>
-          <p className="eyebrow">Daven Operations Board</p>
-          <h1>DAVEN OPERATIONS BOARD</h1>
-        </div>
-        <div className="status-row">
-          {serviceHealth.map((service) => (
-            <div className="status-chip" key={service.label}>
-              <span className={`health-dot ${service.status}`} />
-              <span>{service.label}</span>
-            </div>
-          ))}
-        </div>
-      </section>
-
       <section className="content-grid">
         <div className="left-column">
           <section className="detail-card map-panel">
@@ -722,6 +707,21 @@ export function App() {
         </div>
 
         <aside className="side-panel right-column">
+          <section className="title-bar detail-card right-banner">
+            <div>
+              <p className="eyebrow">Daven Operations Board</p>
+              <h1>DAVEN OPERATIONS BOARD</h1>
+            </div>
+            <div className="status-row">
+              {serviceHealth.map((service) => (
+                <div className="status-chip" key={service.label}>
+                  <span className={`health-dot ${service.status}`} />
+                  <span>{service.label}</span>
+                </div>
+              ))}
+            </div>
+          </section>
+
           <section className="detail-card briefing-panel">
             <header className="panel-header compact">
               <div>
