@@ -58,6 +58,30 @@ create table if not exists assets (
   updated_at timestamptz not null
 );
 
+create table if not exists asset_telemetry (
+  id bigserial primary key,
+  asset_id text not null references assets(id),
+  longitude double precision not null,
+  latitude double precision not null,
+  recorded_at timestamptz not null
+);
+
+create table if not exists recommendations (
+  id text primary key,
+  target_id text not null references targets(id),
+  generated_at timestamptz not null,
+  weights jsonb not null default '{}'::jsonb
+);
+
+create table if not exists recommendation_candidates (
+  id bigserial primary key,
+  recommendation_id text not null references recommendations(id) on delete cascade,
+  asset_id text not null references assets(id),
+  score real not null,
+  rank int not null,
+  explanation jsonb not null default '{}'::jsonb
+);
+
 create table if not exists tasks (
   id text primary key,
   target_id text not null references targets(id),
