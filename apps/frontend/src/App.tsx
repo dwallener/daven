@@ -197,10 +197,10 @@ function describeNextAction(target: Target | null, task: Task | null) {
   return "Review target state and continue the workflow.";
 }
 
-function projectToMap(location: PointGeometry) {
+function projectToMap(location: PointGeometry, radiusDegrees: number) {
   const [lng, lat] = location.coordinates;
-  const x = ((lng - mapCenterLng) / mapRadiusDegrees + 1) * 50;
-  const y = (1 - (lat - mapCenterLat) / mapRadiusDegrees) * 50;
+  const x = ((lng - mapCenterLng) / radiusDegrees + 1) * 50;
+  const y = (1 - (lat - mapCenterLat) / radiusDegrees) * 50;
 
   return {
     x: Math.min(96, Math.max(4, x)),
@@ -208,11 +208,11 @@ function projectToMap(location: PointGeometry) {
   };
 }
 
-function isWithinMapAoi(location: PointGeometry) {
+function isWithinMapAoi(location: PointGeometry, radiusDegrees: number) {
   const [lng, lat] = location.coordinates;
   return (
-    Math.abs(lng - mapCenterLng) <= mapRadiusDegrees &&
-    Math.abs(lat - mapCenterLat) <= mapRadiusDegrees
+    Math.abs(lng - mapCenterLng) <= radiusDegrees &&
+    Math.abs(lat - mapCenterLat) <= radiusDegrees
   );
 }
 
@@ -234,6 +234,7 @@ export function App() {
   const [loadingTasks, setLoadingTasks] = useState(false);
   const [loadingAssessments, setLoadingAssessments] = useState(false);
   const [submittingTask, setSubmittingTask] = useState(false);
+  const [mapZoom, setMapZoom] = useState(1.2);
   const [serviceHealth, setServiceHealth] = useState<ServiceHealth[]>([
     { label: "Workflow", url: workflowApiUrl, status: "checking" },
     { label: "Assets", url: assetApiUrl, status: "checking" },
@@ -247,6 +248,7 @@ export function App() {
   const [assessmentConfidence, setAssessmentConfidence] = useState("0.92");
   const [assessmentNotes, setAssessmentNotes] = useState("");
   const [assessmentMediaRefs, setAssessmentMediaRefs] = useState("clip_001");
+  const mapRadius = mapRadiusDegrees / mapZoom;
 
   async function loadBoard() {
     setLoadingBoard(true);
@@ -400,8 +402,8 @@ export function App() {
     label: target.title,
     highlighted: target.id === selectedTargetId,
     status: target.status,
-    point: projectToMap(target.location),
-    inAoi: isWithinMapAoi(target.location),
+    point: projectToMap(target.location, mapRadius),
+    inAoi: isWithinMapAoi(target.location, mapRadius),
   }));
   const mapAssets = assets.slice(0, 8).map((asset) => ({
     id: asset.id,
@@ -409,13 +411,17 @@ export function App() {
     label: asset.callsign,
     highlighted: currentTask?.asset_ids.includes(asset.id) ?? false,
     status: asset.availability,
-    point: projectToMap(asset.location),
-    inAoi: isWithinMapAoi(asset.location),
+    point: projectToMap(asset.location, mapRadius),
+    inAoi: isWithinMapAoi(asset.location, mapRadius),
   }));
   const visibleTargetCount = mapTargets.filter((item) => item.inAoi).length;
   const visibleAssetCount = mapAssets.filter((item) => item.inAoi).length;
   const hiddenTargetCount = mapTargets.length - visibleTargetCount;
   const hiddenAssetCount = mapAssets.length - visibleAssetCount;
+
+  function adjustMapZoom(delta: number) {
+    setMapZoom((current) => Math.min(4, Math.max(0.8, current + delta)));
+  }
 
   async function proposeTask() {
     if (!selectedTarget || !recommendation?.candidates[0]) {
@@ -545,6 +551,21 @@ export function App() {
 
   return (
     <main className="app-shell">
+      <section className="title-bar detail-card">
+        <div>
+          <p className="eyebrow">Daven Operations Board</p>
+          <h1>DAVEN OPERATIONS BOARD</h1>
+        </div>
+        <div className="status-row">
+          {serviceHealth.map((service) => (
+            <div className="status-chip" key={service.label}>
+              <span className={`health-dot ${service.status}`} />
+              <span>{service.label}</span>
+            </div>
+          ))}
+        </div>
+      </section>
+
       <section className="ops-grid">
         <section className="detail-card map-panel">
           <header className="panel-header compact">
@@ -552,9 +573,31 @@ export function App() {
               <p className="section-kicker">Operations Map</p>
               <h2>Kharg Island Overlay</h2>
             </div>
-            <span className="status-pill subtle">{missionPhase}</span>
+            <div className="map-toolbar">
+              <button
+                className="map-zoom-button"
+                onClick={() => adjustMapZoom(-0.2)}
+                type="button"
+              >
+                -
+              </button>
+              <span className="status-pill subtle">x{mapZoom.toFixed(1)}</span>
+              <button
+                className="map-zoom-button"
+                onClick={() => adjustMapZoom(0.2)}
+                type="button"
+              >
+                +
+              </button>
+            </div>
           </header>
-          <div className="map-frame">
+          <div
+            className="map-frame"
+            onWheel={(event) => {
+              event.preventDefault();
+              adjustMapZoom(event.deltaY > 0 ? -0.15 : 0.15);
+            }}
+          >
             <div className="map-backdrop" />
             <div className="map-ring map-ring-a" />
             <div className="map-ring map-ring-b" />
@@ -648,53 +691,6 @@ export function App() {
             </div>
           </div>
         </section>
-      </section>
-
-      <section className="hero-panel compact-hero">
-        <div>
-          <p className="eyebrow">Daven Operations Board</p>
-          <h1>Workflow, pairing, and asset context on one live screen.</h1>
-          <p className="lede">
-            This board is reading the workflow, asset, recommendation,
-            planning, execution, and assessment APIs directly. The current
-            MVP path runs from detection to nomination to pairing to approved
-            task execution and BDA closeout.
-          </p>
-        </div>
-        <dl className="endpoint-grid">
-          <div>
-            <dt>Workflow</dt>
-            <dd>{workflowApiUrl}</dd>
-          </div>
-          <div>
-            <dt>Assets</dt>
-            <dd>{assetApiUrl}</dd>
-          </div>
-          <div>
-            <dt>Recommendations</dt>
-            <dd>{recommendationApiUrl}</dd>
-          </div>
-          <div>
-            <dt>Planning</dt>
-            <dd>{planningApiUrl}</dd>
-          </div>
-          <div>
-            <dt>Execution</dt>
-            <dd>{executionApiUrl}</dd>
-          </div>
-          <div>
-            <dt>Assessment</dt>
-            <dd>{assessmentApiUrl}</dd>
-          </div>
-        </dl>
-        <div className="health-strip">
-          {serviceHealth.map((service) => (
-            <div className="health-chip" key={service.label}>
-              <span className={`health-dot ${service.status}`} />
-              <span>{service.label}</span>
-            </div>
-          ))}
-        </div>
       </section>
 
       <section className="main-grid">

@@ -47,11 +47,6 @@ button {
   padding: 1.5rem;
 }
 
-.compact-hero {
-  gap: 1rem;
-  padding: 1.1rem 1.25rem;
-}
-
 .eyebrow,
 .section-kicker,
 .detail-label {
@@ -78,10 +73,34 @@ button {
   line-height: 0.92;
 }
 
-.compact-hero h1 {
-  max-width: 14ch;
-  font-size: clamp(1.8rem, 3vw, 2.8rem);
-  line-height: 0.95;
+.title-bar {
+  display: grid;
+  gap: 1rem;
+  padding: 1.15rem 1.25rem;
+}
+
+.title-bar h1 {
+  margin: 0.2rem 0 0;
+  font-size: clamp(2.2rem, 4vw, 3.8rem);
+  line-height: 0.88;
+  letter-spacing: 0.04em;
+}
+
+.status-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.7rem;
+}
+
+.status-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.62rem 0.9rem;
+  border-radius: 999px;
+  background: rgba(17, 35, 50, 0.06);
+  font-size: 0.85rem;
+  font-weight: 700;
 }
 
 .lede {
@@ -113,23 +132,6 @@ button {
   margin: 0.35rem 0 0;
   font-family: "IBM Plex Mono", "SFMono-Regular", monospace;
   font-size: 0.9rem;
-}
-
-.health-strip {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.65rem;
-}
-
-.health-chip {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.45rem;
-  padding: 0.55rem 0.8rem;
-  border-radius: 999px;
-  background: rgba(17, 35, 50, 0.06);
-  font-size: 0.85rem;
-  font-weight: 700;
 }
 
 .health-dot {
@@ -173,7 +175,7 @@ button {
 
 .map-frame {
   position: relative;
-  min-height: 29rem;
+  min-height: 40rem;
   overflow: hidden;
   border-radius: 26px;
   background:
@@ -342,6 +344,24 @@ button {
   flex-wrap: wrap;
   gap: 0.9rem;
   margin-top: 0.9rem;
+}
+
+.map-toolbar {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.map-zoom-button {
+  width: 2.1rem;
+  height: 2.1rem;
+  border: 0;
+  border-radius: 50%;
+  background: #132f42;
+  color: #f5f0e8;
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
 }
 
 .legend-item {
@@ -659,18 +679,13 @@ button {
     padding: 1.5rem;
   }
 
-  .hero-panel {
-    grid-template-columns: minmax(0, 2fr) minmax(18rem, 1fr);
-    align-items: end;
-  }
-
   .main-grid {
     grid-template-columns: minmax(0, 2.1fr) minmax(22rem, 1fr);
     align-items: start;
   }
 
   .ops-grid {
-    grid-template-columns: minmax(0, 1.8fr) minmax(20rem, 0.8fr);
+    grid-template-columns: minmax(0, 1.95fr) minmax(20rem, 0.85fr);
     align-items: stretch;
   }
 
