@@ -8,10 +8,14 @@ RECOMMENDATION_URL="${VITE_RECOMMENDATION_API_URL:-http://127.0.0.1:3005}"
 PLANNING_URL="${VITE_PLANNING_API_URL:-http://127.0.0.1:3006}"
 EXECUTION_URL="${VITE_EXECUTION_API_URL:-http://127.0.0.1:3007}"
 ASSESSMENT_URL="${VITE_ASSESSMENT_API_URL:-http://127.0.0.1:3008}"
+DEMO_TARGET_LNG="${DEMO_TARGET_LNG:-50.318}"
+DEMO_TARGET_LAT="${DEMO_TARGET_LAT:-29.245}"
+DEMO_ASSET_LNG="${DEMO_ASSET_LNG:-50.336}"
+DEMO_ASSET_LAT="${DEMO_ASSET_LAT:-29.231}"
 
 detection_json="$(curl -s -X POST "$INGEST_URL/ingest/detections" \
   -H 'content-type: application/json' \
-  -d '{"source_type":"cv_fmv","source_id":"feed_alpha","external_ref":"frame_455:obj_demo","location":{"type":"Point","coordinates":[-122.91,49.21]},"classification":"vehicle","confidence":0.91}')"
+  -d "{\"source_type\":\"cv_fmv\",\"source_id\":\"feed_alpha\",\"external_ref\":\"frame_455:obj_demo\",\"location\":{\"type\":\"Point\",\"coordinates\":[$DEMO_TARGET_LNG,$DEMO_TARGET_LAT]},\"classification\":\"vehicle\",\"confidence\":0.91}")"
 detection_id="$(printf '%s' "$detection_json" | sed -n 's/.*"id":"\([^"]*\)".*/\1/p')"
 
 target_json="$(curl -s -X POST "$WORKFLOW_URL/detections/$detection_id/nominate" \
@@ -21,7 +25,7 @@ target_id="$(printf '%s' "$target_json" | sed -n 's/.*"id":"\([^"]*\)".*/\1/p')"
 
 asset_json="$(curl -s -X POST "$ASSET_URL/assets" \
   -H 'content-type: application/json' \
-  -d '{"callsign":"StrykerDemo","platform_type":"stryker","domain":"land","location":{"type":"Point","coordinates":[-122.89,49.19]},"capabilities":["observe","strike"]}')"
+  -d "{\"callsign\":\"StrykerDemo\",\"platform_type\":\"stryker\",\"domain\":\"land\",\"location\":{\"type\":\"Point\",\"coordinates\":[$DEMO_ASSET_LNG,$DEMO_ASSET_LAT]},\"capabilities\":[\"observe\",\"strike\"]}")"
 asset_id="$(printf '%s' "$asset_json" | sed -n 's/.*"id":"\([^"]*\)".*/\1/p')"
 
 curl -s "$RECOMMENDATION_URL/recommendations/targets/$target_id" >/dev/null
@@ -43,7 +47,7 @@ Seeded demo entities:
   task:      $task_id
 
 Next in the UI:
-  1. Open the target
+  1. Open the target on the Kharg map
   2. Dispatch task
   3. Complete task
   4. Submit assessment

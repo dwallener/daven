@@ -208,6 +208,14 @@ function projectToMap(location: PointGeometry) {
   };
 }
 
+function isWithinMapAoi(location: PointGeometry) {
+  const [lng, lat] = location.coordinates;
+  return (
+    Math.abs(lng - mapCenterLng) <= mapRadiusDegrees &&
+    Math.abs(lat - mapCenterLat) <= mapRadiusDegrees
+  );
+}
+
 export function App() {
   const [boardData, setBoardData] = useState<BoardTargetsResponse | null>(null);
   const [assets, setAssets] = useState<Asset[]>([]);
@@ -393,6 +401,7 @@ export function App() {
     highlighted: target.id === selectedTargetId,
     status: target.status,
     point: projectToMap(target.location),
+    inAoi: isWithinMapAoi(target.location),
   }));
   const mapAssets = assets.slice(0, 8).map((asset) => ({
     id: asset.id,
@@ -401,7 +410,12 @@ export function App() {
     highlighted: currentTask?.asset_ids.includes(asset.id) ?? false,
     status: asset.availability,
     point: projectToMap(asset.location),
+    inAoi: isWithinMapAoi(asset.location),
   }));
+  const visibleTargetCount = mapTargets.filter((item) => item.inAoi).length;
+  const visibleAssetCount = mapAssets.filter((item) => item.inAoi).length;
+  const hiddenTargetCount = mapTargets.length - visibleTargetCount;
+  const hiddenAssetCount = mapAssets.length - visibleAssetCount;
 
   async function proposeTask() {
     if (!selectedTarget || !recommendation?.candidates[0]) {
@@ -531,7 +545,112 @@ export function App() {
 
   return (
     <main className="app-shell">
-      <section className="hero-panel">
+      <section className="ops-grid">
+        <section className="detail-card map-panel">
+          <header className="panel-header compact">
+            <div>
+              <p className="section-kicker">Operations Map</p>
+              <h2>Kharg Island Overlay</h2>
+            </div>
+            <span className="status-pill subtle">{missionPhase}</span>
+          </header>
+          <div className="map-frame">
+            <div className="map-backdrop" />
+            <div className="map-ring map-ring-a" />
+            <div className="map-ring map-ring-b" />
+            <div className="map-crosshair map-crosshair-h" />
+            <div className="map-crosshair map-crosshair-v" />
+            <div className="map-coast map-coast-main" />
+            <div className="map-coast map-coast-island" />
+            <div className="map-center-label">
+              Centered on Kharg Island
+              <span>{mapCenterLat.toFixed(3)}, {mapCenterLng.toFixed(3)}</span>
+            </div>
+            <div className="map-overlay-stats">
+              <span>{visibleTargetCount} targets in AOI</span>
+              <span>{visibleAssetCount} assets in AOI</span>
+            </div>
+            {mapTargets.filter((item) => item.inAoi).map((item) => (
+              <button
+                className={`map-marker ${item.kind}${item.highlighted ? " highlighted" : ""}`}
+                key={item.id}
+                onClick={() => setSelectedTargetId(item.id)}
+                style={{ left: `${item.point.x}%`, top: `${item.point.y}%` }}
+                type="button"
+              >
+                <span>{item.label}</span>
+              </button>
+            ))}
+            {mapAssets.filter((item) => item.inAoi).map((item) => (
+              <div
+                className={`map-marker ${item.kind}${item.highlighted ? " highlighted" : ""}`}
+                key={item.id}
+                style={{ left: `${item.point.x}%`, top: `${item.point.y}%` }}
+              >
+                <span>{item.label}</span>
+              </div>
+            ))}
+            {hiddenTargetCount || hiddenAssetCount ? (
+              <div className="map-offboard">
+                <p className="detail-label">Outside Kharg AOI</p>
+                <p>
+                  {hiddenTargetCount} targets and {hiddenAssetCount} assets are outside the
+                  current map window.
+                </p>
+              </div>
+            ) : null}
+          </div>
+          <div className="map-legend">
+            <span className="legend-item">
+              <span className="legend-swatch target" />
+              Target
+            </span>
+            <span className="legend-item">
+              <span className="legend-swatch asset" />
+              Asset
+            </span>
+            <span className="legend-item">
+              <span className="legend-swatch focus" />
+              Selected / assigned
+            </span>
+          </div>
+        </section>
+
+        <section className="detail-card briefing-panel">
+          <header className="panel-header compact">
+            <div>
+              <p className="section-kicker">Mission Brief</p>
+              <h2>{selectedTarget?.title ?? "Awaiting selection"}</h2>
+            </div>
+          </header>
+          <div className="brief-grid">
+            <div className="brief-block">
+              <p className="detail-label">Phase</p>
+              <p>{missionPhase}</p>
+            </div>
+            <div className="brief-block">
+              <p className="detail-label">Priority</p>
+              <p>{selectedTarget ? `P${selectedTarget.priority}` : "N/A"}</p>
+            </div>
+            <div className="brief-block brief-span">
+              <p className="detail-label">Next Action</p>
+              <p>{nextAction}</p>
+            </div>
+            <div className="brief-block brief-span">
+              <p className="detail-label">Current Focus</p>
+              <p>
+                {selectedTarget
+                  ? `${selectedTarget.classification ?? "Unknown"} target near ${formatCoordinates(
+                      selectedTarget.location,
+                    )}`
+                  : "Choose a target on the board or map to inspect it."}
+              </p>
+            </div>
+          </div>
+        </section>
+      </section>
+
+      <section className="hero-panel compact-hero">
         <div>
           <p className="eyebrow">Daven Operations Board</p>
           <h1>Workflow, pairing, and asset context on one live screen.</h1>
@@ -576,82 +695,6 @@ export function App() {
             </div>
           ))}
         </div>
-      </section>
-
-      <section className="ops-grid">
-        <section className="detail-card map-panel">
-          <header className="panel-header compact">
-            <div>
-              <p className="section-kicker">Operations Map</p>
-              <h2>Kharg Island Overlay</h2>
-            </div>
-            <span className="status-pill subtle">{missionPhase}</span>
-          </header>
-          <div className="map-frame">
-            <div className="map-backdrop" />
-            <div className="map-ring map-ring-a" />
-            <div className="map-ring map-ring-b" />
-            <div className="map-crosshair map-crosshair-h" />
-            <div className="map-crosshair map-crosshair-v" />
-            <div className="map-center-label">
-              Centered on Kharg Island
-              <span>{mapCenterLat.toFixed(3)}, {mapCenterLng.toFixed(3)}</span>
-            </div>
-            {mapTargets.map((item) => (
-              <button
-                className={`map-marker ${item.kind}${item.highlighted ? " highlighted" : ""}`}
-                key={item.id}
-                onClick={() => setSelectedTargetId(item.id)}
-                style={{ left: `${item.point.x}%`, top: `${item.point.y}%` }}
-                type="button"
-              >
-                <span>{item.label}</span>
-              </button>
-            ))}
-            {mapAssets.map((item) => (
-              <div
-                className={`map-marker ${item.kind}${item.highlighted ? " highlighted" : ""}`}
-                key={item.id}
-                style={{ left: `${item.point.x}%`, top: `${item.point.y}%` }}
-              >
-                <span>{item.label}</span>
-              </div>
-            ))}
-          </div>
-        </section>
-
-        <section className="detail-card briefing-panel">
-          <header className="panel-header compact">
-            <div>
-              <p className="section-kicker">Mission Brief</p>
-              <h2>{selectedTarget?.title ?? "Awaiting selection"}</h2>
-            </div>
-          </header>
-          <div className="brief-grid">
-            <div className="brief-block">
-              <p className="detail-label">Phase</p>
-              <p>{missionPhase}</p>
-            </div>
-            <div className="brief-block">
-              <p className="detail-label">Priority</p>
-              <p>{selectedTarget ? `P${selectedTarget.priority}` : "N/A"}</p>
-            </div>
-            <div className="brief-block brief-span">
-              <p className="detail-label">Next Action</p>
-              <p>{nextAction}</p>
-            </div>
-            <div className="brief-block brief-span">
-              <p className="detail-label">Current Focus</p>
-              <p>
-                {selectedTarget
-                  ? `${selectedTarget.classification ?? "Unknown"} target near ${formatCoordinates(
-                      selectedTarget.location,
-                    )}`
-                  : "Choose a target on the board or map to inspect it."}
-              </p>
-            </div>
-          </div>
-        </section>
       </section>
 
       <section className="main-grid">
