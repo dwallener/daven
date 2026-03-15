@@ -15,6 +15,8 @@ Current implemented scope:
 - Frontend board supports approval, dispatch, completion, and BDA submission from the UI
 - Demo UI includes a lightweight operations map centered on Kharg Island by default
 
+![Image](docs/Daven-UI.png)
+
 ## Workspace layout
 
 - `apps/api-gateway`: placeholder API gateway crate
