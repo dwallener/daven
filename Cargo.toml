@@ -3,7 +3,7 @@ members = [
   "apps/api-gateway",
   "libs/config",
   "libs/domain-models",
-  "libs/event-contracts", "services/asset-service", "services/ingest-service", "services/recommendation-service",
+  "libs/event-contracts", "services/asset-service", "services/ingest-service", "services/planning-service", "services/recommendation-service",
   "services/workflow-service",
 ]
 resolver = "2"

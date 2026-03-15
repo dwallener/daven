@@ -34,6 +34,8 @@ create table if not exists targets (
   labels jsonb not null default '[]'::jsonb
 );
 
+alter table targets add column if not exists labels jsonb not null default '[]'::jsonb;
+
 create index if not exists idx_targets_status on targets(status);
 create index if not exists idx_targets_board on targets(board_id);
 
@@ -90,8 +92,15 @@ create table if not exists tasks (
   effect_type text not null,
   status text not null,
   approval_status text not null,
-  time_on_target timestamptz
+  time_on_target timestamptz,
+  created_by text not null default 'system',
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
 );
+
+alter table tasks add column if not exists created_by text not null default 'system';
+alter table tasks add column if not exists created_at timestamptz not null default now();
+alter table tasks add column if not exists updated_at timestamptz not null default now();
 
 create table if not exists assessments (
   id text primary key,

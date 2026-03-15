@@ -68,12 +68,25 @@ type Recommendation = {
   candidates: RecommendationCandidate[];
 };
 
+type Task = {
+  id: string;
+  target_id: string;
+  asset_ids: string[];
+  task_type: string;
+  effect_type: string;
+  status: string;
+  approval_status: string;
+  time_on_target: string | null;
+};
+
 const workflowApiUrl =
   import.meta.env.VITE_WORKFLOW_API_URL ?? "http://127.0.0.1:3003";
 const assetApiUrl =
   import.meta.env.VITE_ASSET_API_URL ?? "http://127.0.0.1:3004";
 const recommendationApiUrl =
   import.meta.env.VITE_RECOMMENDATION_API_URL ?? "http://127.0.0.1:3005";
+const planningApiUrl =
+  import.meta.env.VITE_PLANNING_API_URL ?? "http://127.0.0.1:3006";
 
 async function fetchJson<T>(url: string): Promise<T> {
   const response = await fetch(url);
@@ -99,76 +112,77 @@ export function App() {
   const [assets, setAssets] = useState<Asset[]>([]);
   const [selectedTargetId, setSelectedTargetId] = useState<string | null>(null);
   const [recommendation, setRecommendation] = useState<Recommendation | null>(null);
+  const [tasks, setTasks] = useState<Task[]>([]);
   const [boardError, setBoardError] = useState<string | null>(null);
   const [assetError, setAssetError] = useState<string | null>(null);
   const [recommendationError, setRecommendationError] = useState<string | null>(null);
+  const [taskError, setTaskError] = useState<string | null>(null);
   const [loadingBoard, setLoadingBoard] = useState(true);
   const [loadingAssets, setLoadingAssets] = useState(true);
   const [loadingRecommendation, setLoadingRecommendation] = useState(false);
+  const [loadingTasks, setLoadingTasks] = useState(false);
+  const [submittingTask, setSubmittingTask] = useState(false);
+
+  async function loadBoard() {
+    setLoadingBoard(true);
+    setBoardError(null);
+    try {
+      const data = await fetchJson<BoardTargetsResponse>(
+        `${workflowApiUrl}/boards/dynamic-main/targets`,
+      );
+      setBoardData(data);
+
+      const firstTarget =
+        data.columns.DELIBERATE?.[0] ?? Object.values(data.columns).flat()[0] ?? null;
+
+      startTransition(() => {
+        setSelectedTargetId((current) => current ?? firstTarget?.id ?? null);
+      });
+    } catch (error) {
+      setBoardError(error instanceof Error ? error.message : "Board request failed");
+    } finally {
+      setLoadingBoard(false);
+    }
+  }
+
+  async function loadAssets() {
+    setLoadingAssets(true);
+    setAssetError(null);
+    try {
+      const data = await fetchJson<Asset[]>(`${assetApiUrl}/assets`);
+      setAssets(data);
+    } catch (error) {
+      setAssetError(error instanceof Error ? error.message : "Asset request failed");
+    } finally {
+      setLoadingAssets(false);
+    }
+  }
+
+  async function loadTasks(targetId: string) {
+    setLoadingTasks(true);
+    setTaskError(null);
+    try {
+      const data = await fetchJson<Task[]>(`${planningApiUrl}/tasks/targets/${targetId}`);
+      setTasks(data);
+    } catch (error) {
+      setTaskError(error instanceof Error ? error.message : "Task request failed");
+    } finally {
+      setLoadingTasks(false);
+    }
+  }
 
   useEffect(() => {
-    let active = true;
-
-    const loadBoard = async () => {
-      setLoadingBoard(true);
-      setBoardError(null);
-      try {
-        const data = await fetchJson<BoardTargetsResponse>(
-          `${workflowApiUrl}/boards/dynamic-main/targets`,
-        );
-        if (!active) return;
-        setBoardData(data);
-
-        const firstTarget =
-          data.columns.DELIBERATE?.[0] ??
-          Object.values(data.columns).flat()[0] ??
-          null;
-
-        startTransition(() => {
-          setSelectedTargetId((current) => current ?? firstTarget?.id ?? null);
-        });
-      } catch (error) {
-        if (!active) return;
-        setBoardError(error instanceof Error ? error.message : "Board request failed");
-      } finally {
-        if (active) {
-          setLoadingBoard(false);
-        }
-      }
-    };
-
-    const loadAssets = async () => {
-      setLoadingAssets(true);
-      setAssetError(null);
-      try {
-        const data = await fetchJson<Asset[]>(`${assetApiUrl}/assets`);
-        if (!active) return;
-        setAssets(data);
-      } catch (error) {
-        if (!active) return;
-        setAssetError(error instanceof Error ? error.message : "Asset request failed");
-      } finally {
-        if (active) {
-          setLoadingAssets(false);
-        }
-      }
-    };
-
     void loadBoard();
     void loadAssets();
-
-    return () => {
-      active = false;
-    };
   }, []);
 
   useEffect(() => {
     if (!selectedTargetId) {
       setRecommendation(null);
+      setTasks([]);
       return;
     }
 
-    let active = true;
     const loadRecommendation = async () => {
       setLoadingRecommendation(true);
       setRecommendationError(null);
@@ -176,30 +190,83 @@ export function App() {
         const response = await fetchJson<{ resource: Recommendation }>(
           `${recommendationApiUrl}/recommendations/targets/${selectedTargetId}`,
         );
-        if (!active) return;
         setRecommendation(response.resource);
       } catch (error) {
-        if (!active) return;
         setRecommendationError(
           error instanceof Error ? error.message : "Recommendation request failed",
         );
       } finally {
-        if (active) {
-          setLoadingRecommendation(false);
-        }
+        setLoadingRecommendation(false);
       }
     };
 
     void loadRecommendation();
-    return () => {
-      active = false;
-    };
+    void loadTasks(selectedTargetId);
   }, [selectedTargetId]);
 
   const allTargets = boardData ? Object.values(boardData.columns).flat() : [];
   const selectedTarget =
     allTargets.find((target) => target.id === selectedTargetId) ?? null;
   const assetMap = new Map(assets.map((asset) => [asset.id, asset]));
+  const currentTask = tasks[0] ?? null;
+
+  async function proposeTask() {
+    if (!selectedTarget || !recommendation?.candidates[0]) {
+      return;
+    }
+
+    setSubmittingTask(true);
+    setTaskError(null);
+    try {
+      const response = await fetch(`${planningApiUrl}/tasks/propose`, {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          target_id: selectedTarget.id,
+          asset_ids: [recommendation.candidates[0].asset_id],
+          task_type: "SMACK",
+          effect_type: "kinetic",
+          created_by: "operator",
+        }),
+      });
+      if (!response.ok) {
+        throw new Error(`${response.status} ${response.statusText}`);
+      }
+      await loadTasks(selectedTarget.id);
+      await loadBoard();
+    } catch (error) {
+      setTaskError(error instanceof Error ? error.message : "Task proposal failed");
+    } finally {
+      setSubmittingTask(false);
+    }
+  }
+
+  async function updateTaskApproval(action: "approve" | "reject") {
+    if (!currentTask) {
+      return;
+    }
+
+    setSubmittingTask(true);
+    setTaskError(null);
+    try {
+      const response = await fetch(`${planningApiUrl}/tasks/${currentTask.id}/${action}`, {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ actor: "operator" }),
+      });
+      if (!response.ok) {
+        throw new Error(`${response.status} ${response.statusText}`);
+      }
+      if (selectedTarget) {
+        await loadTasks(selectedTarget.id);
+      }
+      await loadBoard();
+    } catch (error) {
+      setTaskError(error instanceof Error ? error.message : `Task ${action} failed`);
+    } finally {
+      setSubmittingTask(false);
+    }
+  }
 
   return (
     <main className="app-shell">
@@ -225,6 +292,10 @@ export function App() {
           <div>
             <dt>Recommendations</dt>
             <dd>{recommendationApiUrl}</dd>
+          </div>
+          <div>
+            <dt>Planning</dt>
+            <dd>{planningApiUrl}</dd>
           </div>
         </dl>
       </section>
@@ -365,6 +436,77 @@ export function App() {
                 <p className="empty-text">Select a target to generate recommendations.</p>
               ) : null}
             </div>
+            <div className="action-row">
+              <button
+                className="action-button"
+                disabled={!selectedTarget || !recommendation?.candidates.length || submittingTask}
+                onClick={() => void proposeTask()}
+                type="button"
+              >
+                {submittingTask ? "Submitting" : "Propose Task From Top Candidate"}
+              </button>
+            </div>
+          </section>
+
+          <section className="detail-card">
+            <header className="panel-header compact">
+              <div>
+                <p className="section-kicker">Task Planning</p>
+                <h2>Drafts and Approvals</h2>
+              </div>
+              <span className="status-pill subtle">
+                {loadingTasks ? "Loading tasks" : tasks.length}
+              </span>
+            </header>
+            {taskError ? <p className="error-text">{taskError}</p> : null}
+            {currentTask ? (
+              <div className="task-panel">
+                <div className="detail-grid">
+                  <div>
+                    <p className="detail-label">Task</p>
+                    <p>{currentTask.task_type}</p>
+                  </div>
+                  <div>
+                    <p className="detail-label">Effect</p>
+                    <p>{currentTask.effect_type}</p>
+                  </div>
+                  <div>
+                    <p className="detail-label">Status</p>
+                    <p>{currentTask.status}</p>
+                  </div>
+                  <div>
+                    <p className="detail-label">Approval</p>
+                    <p>{currentTask.approval_status}</p>
+                  </div>
+                </div>
+                <div className="action-row">
+                  <button
+                    className="action-button"
+                    disabled={
+                      submittingTask || currentTask.approval_status === "APPROVED"
+                    }
+                    onClick={() => void updateTaskApproval("approve")}
+                    type="button"
+                  >
+                    Approve Task
+                  </button>
+                  <button
+                    className="action-button secondary"
+                    disabled={
+                      submittingTask || currentTask.approval_status === "REJECTED"
+                    }
+                    onClick={() => void updateTaskApproval("reject")}
+                    type="button"
+                  >
+                    Reject Task
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <p className="empty-text">
+                No task has been proposed for the selected target yet.
+              </p>
+            )}
           </section>
 
           <section className="detail-card">

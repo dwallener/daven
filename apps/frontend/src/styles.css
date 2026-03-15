@@ -172,7 +172,8 @@ button {
 
 .card-stack,
 .recommendation-list,
-.asset-list {
+.asset-list,
+.task-panel {
   display: grid;
   gap: 0.8rem;
 }
@@ -269,6 +270,33 @@ button {
 
 .score-line strong {
   color: #112332;
+}
+
+.action-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+
+.action-button {
+  border: 0;
+  border-radius: 999px;
+  padding: 0.75rem 1rem;
+  background: #9c4d1c;
+  color: #fff8f1;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.action-button.secondary {
+  background: rgba(19, 47, 66, 0.14);
+  color: #132f42;
+}
+
+.action-button:disabled {
+  opacity: 0.55;
+  cursor: default;
 }
 
 @media (min-width: 980px) {

@@ -8,6 +8,7 @@ Current implemented scope:
 - Native PostgreSQL-backed ingest service
 - Native PostgreSQL-backed asset service
 - Native PostgreSQL-backed recommendation service
+- Native PostgreSQL-backed planning service
 - React + TypeScript workflow board that reads the live APIs
 
 ## Workspace layout
@@ -21,6 +22,7 @@ Current implemented scope:
 - `services/workflow-service`: targets, transitions, boards, nomination
 - `services/asset-service`: asset registry and telemetry updates
 - `services/recommendation-service`: target-to-asset ranking
+- `services/planning-service`: task proposal and approval flow
 - `infra/db/migrations`: bootstrap schema
 
 ## Prerequisites
@@ -75,6 +77,12 @@ Recommendation service on `3005`:
 APP_PORT=3005 DATABASE_URL='postgresql:///daven' cargo run -p recommendation-service
 ```
 
+Planning service on `3006`:
+
+```zsh
+APP_PORT=3006 DATABASE_URL='postgresql:///daven' cargo run -p planning-service
+```
+
 If a service says `Address already in use`, another copy is already running on that port.
 
 ## Run the frontend
@@ -92,6 +100,7 @@ By default the frontend expects:
 - workflow API: `http://127.0.0.1:3003`
 - asset API: `http://127.0.0.1:3004`
 - recommendation API: `http://127.0.0.1:3005`
+- planning API: `http://127.0.0.1:3006`
 
 You can override those with Vite env vars:
 
@@ -99,6 +108,7 @@ You can override those with Vite env vars:
 VITE_WORKFLOW_API_URL=http://127.0.0.1:3003
 VITE_ASSET_API_URL=http://127.0.0.1:3004
 VITE_RECOMMENDATION_API_URL=http://127.0.0.1:3005
+VITE_PLANNING_API_URL=http://127.0.0.1:3006
 ```
 
 Example:
@@ -108,12 +118,13 @@ cd apps/frontend
 VITE_WORKFLOW_API_URL=http://127.0.0.1:3003 \
 VITE_ASSET_API_URL=http://127.0.0.1:3004 \
 VITE_RECOMMENDATION_API_URL=http://127.0.0.1:3005 \
+VITE_PLANNING_API_URL=http://127.0.0.1:3006 \
 npm run dev
 ```
 
 ## First end-to-end test
 
-1. Start the four backend services.
+1. Start the five backend services.
 2. Create a detection:
 
 ```zsh
@@ -144,7 +155,23 @@ curl -s -X POST http://127.0.0.1:3004/assets \
 curl -s http://127.0.0.1:3005/recommendations/targets/TARGET_ID
 ```
 
-6. Open the frontend and inspect the live board.
+6. Propose a task:
+
+```zsh
+curl -s -X POST http://127.0.0.1:3006/tasks/propose \
+  -H 'content-type: application/json' \
+  -d '{"target_id":"TARGET_ID","asset_ids":["ASSET_ID"],"task_type":"SMACK","effect_type":"kinetic","created_by":"damir00"}'
+```
+
+7. Approve it:
+
+```zsh
+curl -s -X POST http://127.0.0.1:3006/tasks/TASK_ID/approve \
+  -H 'content-type: application/json' \
+  -d '{"actor":"damir00"}'
+```
+
+8. Open the frontend and inspect the live board.
 
 ## Implemented backend slices
 
@@ -175,6 +202,14 @@ curl -s http://127.0.0.1:3005/recommendations/targets/TARGET_ID
 ### Recommendations
 
 - `GET /recommendations/targets/{target_id}`
+
+### Planning
+
+- `POST /tasks/propose`
+- `GET /tasks/{id}`
+- `GET /tasks/targets/{target_id}`
+- `POST /tasks/{id}/approve`
+- `POST /tasks/{id}/reject`
 
 ## Current notes
 
