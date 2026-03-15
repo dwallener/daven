@@ -184,7 +184,7 @@ button {
 }
 
 .right-banner h1 {
-  font-size: clamp(1.8rem, 3.2vw, 2.9rem);
+  font-size: clamp(1.55rem, 2.2vw, 2.35rem);
 }
 
 .map-frame {
@@ -705,6 +705,6 @@ button {
   }
 
   .content-grid {
-    grid-template-columns: minmax(0, 2.6fr) minmax(20rem, 0.65fr);
+    grid-template-columns: minmax(0, 3.7fr) minmax(16rem, 0.45fr);
   }
 }
