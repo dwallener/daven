@@ -53,21 +53,24 @@ Stop all demo-started backend services:
 ./scripts/demo_down.sh
 ```
 
-Seed a ready-to-demo target and approved task:
+Seed a ready-to-demo Kharg scenario:
 
 ```zsh
 ./scripts/seed_demo.sh
 ```
 
-That script creates:
+That script creates a small in-area scenario around Kharg Island with:
 
-- one detection
-- one nominated target
-- one strike-capable asset
-- one recommendation
-- one proposed and approved task
+- five detections
+- five nominated targets
+- five local assets
+- refreshed recommendations for each target
+- one paired target
+- one in-execution target
+- one pending-BDA target
+- one assessed-complete target
 
-So you can open the UI and drive dispatch, completion, and BDA from there.
+So the map, workflow board, and right-side panels all have useful live data immediately.
 
 ## Database setup
 
