@@ -566,8 +566,9 @@ export function App() {
         </div>
       </section>
 
-      <section className="ops-grid">
-        <section className="detail-card map-panel">
+      <section className="content-grid">
+        <div className="left-column">
+          <section className="detail-card map-panel">
           <header className="panel-header compact">
             <div>
               <p className="section-kicker">Operations Map</p>
@@ -657,44 +658,9 @@ export function App() {
               Selected / assigned
             </span>
           </div>
-        </section>
+          </section>
 
-        <section className="detail-card briefing-panel">
-          <header className="panel-header compact">
-            <div>
-              <p className="section-kicker">Mission Brief</p>
-              <h2>{selectedTarget?.title ?? "Awaiting selection"}</h2>
-            </div>
-          </header>
-          <div className="brief-grid">
-            <div className="brief-block">
-              <p className="detail-label">Phase</p>
-              <p>{missionPhase}</p>
-            </div>
-            <div className="brief-block">
-              <p className="detail-label">Priority</p>
-              <p>{selectedTarget ? `P${selectedTarget.priority}` : "N/A"}</p>
-            </div>
-            <div className="brief-block brief-span">
-              <p className="detail-label">Next Action</p>
-              <p>{nextAction}</p>
-            </div>
-            <div className="brief-block brief-span">
-              <p className="detail-label">Current Focus</p>
-              <p>
-                {selectedTarget
-                  ? `${selectedTarget.classification ?? "Unknown"} target near ${formatCoordinates(
-                      selectedTarget.location,
-                    )}`
-                  : "Choose a target on the board or map to inspect it."}
-              </p>
-            </div>
-          </div>
-        </section>
-      </section>
-
-      <section className="main-grid">
-        <section className="board-panel">
+          <section className="board-panel">
           <header className="panel-header">
             <div>
               <p className="section-kicker">Workflow Board</p>
@@ -752,9 +718,43 @@ export function App() {
               );
             })}
           </div>
-        </section>
+          </section>
+        </div>
 
-        <aside className="side-panel">
+        <aside className="side-panel right-column">
+          <section className="detail-card briefing-panel">
+            <header className="panel-header compact">
+              <div>
+                <p className="section-kicker">Mission Brief</p>
+                <h2>{selectedTarget?.title ?? "Awaiting selection"}</h2>
+              </div>
+            </header>
+            <div className="brief-grid">
+              <div className="brief-block">
+                <p className="detail-label">Phase</p>
+                <p>{missionPhase}</p>
+              </div>
+              <div className="brief-block">
+                <p className="detail-label">Priority</p>
+                <p>{selectedTarget ? `P${selectedTarget.priority}` : "N/A"}</p>
+              </div>
+              <div className="brief-block brief-span">
+                <p className="detail-label">Next Action</p>
+                <p>{nextAction}</p>
+              </div>
+              <div className="brief-block brief-span">
+                <p className="detail-label">Current Focus</p>
+                <p>
+                  {selectedTarget
+                    ? `${selectedTarget.classification ?? "Unknown"} target near ${formatCoordinates(
+                        selectedTarget.location,
+                      )}`
+                    : "Choose a target on the board or map to inspect it."}
+                </p>
+              </div>
+            </div>
+          </section>
+
           <section className="detail-card">
             <header className="panel-header compact">
               <div>

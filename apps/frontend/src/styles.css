@@ -153,15 +153,15 @@ button {
   background: #8d6a21;
 }
 
-.main-grid {
+.content-grid {
   display: grid;
   gap: 1.5rem;
+  align-items: start;
 }
 
-.ops-grid {
+.left-column {
   display: grid;
   gap: 1.5rem;
-  justify-items: center;
 }
 
 .board-panel,
@@ -175,10 +175,6 @@ button {
 }
 
 .map-panel {
-  width: min(100%, 78rem);
-}
-
-.briefing-panel {
   width: min(100%, 78rem);
 }
 
@@ -695,12 +691,11 @@ button {
     align-items: start;
   }
 
-  .ops-grid {
-    grid-template-columns: 1fr;
-    align-items: stretch;
-  }
-
   .board-columns {
     grid-template-columns: repeat(7, minmax(18rem, 1fr));
+  }
+
+  .content-grid {
+    grid-template-columns: minmax(0, 1.7fr) minmax(24rem, 0.85fr);
   }
 }
