@@ -9,6 +9,7 @@ Current implemented scope:
 - Native PostgreSQL-backed asset service
 - Native PostgreSQL-backed recommendation service
 - Native PostgreSQL-backed planning service
+- Native PostgreSQL-backed execution adapter
 - React + TypeScript workflow board that reads the live APIs
 
 ## Workspace layout
@@ -23,6 +24,7 @@ Current implemented scope:
 - `services/asset-service`: asset registry and telemetry updates
 - `services/recommendation-service`: target-to-asset ranking
 - `services/planning-service`: task proposal and approval flow
+- `services/execution-adapter`: dispatch and execution state updates
 - `infra/db/migrations`: bootstrap schema
 
 ## Prerequisites
@@ -53,16 +55,16 @@ That uses your local PostgreSQL socket and current macOS username.
 
 Open one terminal per service from the repo root.
 
-Workflow service on `3003`:
-
-```zsh
-APP_PORT=3003 DATABASE_URL='postgresql:///daven' cargo run -p workflow-service
-```
-
 Ingest service on `3002`:
 
 ```zsh
 APP_PORT=3002 DATABASE_URL='postgresql:///daven' cargo run -p ingest-service
+```
+
+Workflow service on `3003`:
+
+```zsh
+APP_PORT=3003 DATABASE_URL='postgresql:///daven' cargo run -p workflow-service
 ```
 
 Asset service on `3004`:
@@ -83,6 +85,12 @@ Planning service on `3006`:
 APP_PORT=3006 DATABASE_URL='postgresql:///daven' cargo run -p planning-service
 ```
 
+Execution adapter on `3007`:
+
+```zsh
+APP_PORT=3007 DATABASE_URL='postgresql:///daven' cargo run -p execution-adapter
+```
+
 If a service says `Address already in use`, another copy is already running on that port.
 
 ## Run the frontend
@@ -101,6 +109,7 @@ By default the frontend expects:
 - asset API: `http://127.0.0.1:3004`
 - recommendation API: `http://127.0.0.1:3005`
 - planning API: `http://127.0.0.1:3006`
+- execution API: `http://127.0.0.1:3007`
 
 You can override those with Vite env vars:
 
@@ -109,6 +118,7 @@ VITE_WORKFLOW_API_URL=http://127.0.0.1:3003
 VITE_ASSET_API_URL=http://127.0.0.1:3004
 VITE_RECOMMENDATION_API_URL=http://127.0.0.1:3005
 VITE_PLANNING_API_URL=http://127.0.0.1:3006
+VITE_EXECUTION_API_URL=http://127.0.0.1:3007
 ```
 
 Example:
@@ -119,12 +129,13 @@ VITE_WORKFLOW_API_URL=http://127.0.0.1:3003 \
 VITE_ASSET_API_URL=http://127.0.0.1:3004 \
 VITE_RECOMMENDATION_API_URL=http://127.0.0.1:3005 \
 VITE_PLANNING_API_URL=http://127.0.0.1:3006 \
+VITE_EXECUTION_API_URL=http://127.0.0.1:3007 \
 npm run dev
 ```
 
 ## First end-to-end test
 
-1. Start the five backend services.
+1. Start the six backend services.
 2. Create a detection:
 
 ```zsh
@@ -171,7 +182,23 @@ curl -s -X POST http://127.0.0.1:3006/tasks/TASK_ID/approve \
   -d '{"actor":"damir00"}'
 ```
 
-8. Open the frontend and inspect the live board.
+8. Dispatch it:
+
+```zsh
+curl -s -X POST http://127.0.0.1:3007/tasks/TASK_ID/dispatch \
+  -H 'content-type: application/json' \
+  -d '{"actor":"damir00","notes":"launch task"}'
+```
+
+9. Complete it:
+
+```zsh
+curl -s -X POST http://127.0.0.1:3007/tasks/TASK_ID/complete \
+  -H 'content-type: application/json' \
+  -d '{"actor":"damir00","notes":"task complete"}'
+```
+
+10. Open the frontend and inspect the live board.
 
 ## Implemented backend slices
 
@@ -210,6 +237,13 @@ curl -s -X POST http://127.0.0.1:3006/tasks/TASK_ID/approve \
 - `GET /tasks/targets/{target_id}`
 - `POST /tasks/{id}/approve`
 - `POST /tasks/{id}/reject`
+
+### Execution
+
+- `GET /health`
+- `GET /tasks/{id}`
+- `POST /tasks/{id}/dispatch`
+- `POST /tasks/{id}/complete`
 
 ## Current notes
 

@@ -84,6 +84,15 @@ create table if not exists recommendation_candidates (
   explanation jsonb not null default '{}'::jsonb
 );
 
+create table if not exists task_execution_updates (
+  id bigserial primary key,
+  task_id text not null references tasks(id),
+  execution_status text not null,
+  actor text not null,
+  notes text,
+  created_at timestamptz not null default now()
+);
+
 create table if not exists tasks (
   id text primary key,
   target_id text not null references targets(id),

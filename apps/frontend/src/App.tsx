@@ -87,6 +87,8 @@ const recommendationApiUrl =
   import.meta.env.VITE_RECOMMENDATION_API_URL ?? "http://127.0.0.1:3005";
 const planningApiUrl =
   import.meta.env.VITE_PLANNING_API_URL ?? "http://127.0.0.1:3006";
+const executionApiUrl =
+  import.meta.env.VITE_EXECUTION_API_URL ?? "http://127.0.0.1:3007";
 
 async function fetchJson<T>(url: string): Promise<T> {
   const response = await fetch(url);
@@ -268,6 +270,36 @@ export function App() {
     }
   }
 
+  async function updateExecution(action: "dispatch" | "complete") {
+    if (!currentTask) {
+      return;
+    }
+
+    setSubmittingTask(true);
+    setTaskError(null);
+    try {
+      const response = await fetch(`${executionApiUrl}/tasks/${currentTask.id}/${action}`, {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          actor: "operator",
+          notes: `ui ${action}`,
+        }),
+      });
+      if (!response.ok) {
+        throw new Error(`${response.status} ${response.statusText}`);
+      }
+      if (selectedTarget) {
+        await loadTasks(selectedTarget.id);
+      }
+      await loadBoard();
+    } catch (error) {
+      setTaskError(error instanceof Error ? error.message : `Task ${action} failed`);
+    } finally {
+      setSubmittingTask(false);
+    }
+  }
+
   return (
     <main className="app-shell">
       <section className="hero-panel">
@@ -275,9 +307,9 @@ export function App() {
           <p className="eyebrow">Daven Operations Board</p>
           <h1>Workflow, pairing, and asset context on one live screen.</h1>
           <p className="lede">
-            This board is reading the workflow, asset, and recommendation APIs
-            directly. The current MVP path is detection to nomination to ranked
-            asset suggestions.
+            This board is reading the workflow, asset, recommendation,
+            planning, and execution APIs directly. The current MVP path runs
+            from detection to nomination to pairing to approved task execution.
           </p>
         </div>
         <dl className="endpoint-grid">
@@ -296,6 +328,10 @@ export function App() {
           <div>
             <dt>Planning</dt>
             <dd>{planningApiUrl}</dd>
+          </div>
+          <div>
+            <dt>Execution</dt>
+            <dd>{executionApiUrl}</dd>
           </div>
         </dl>
       </section>
@@ -483,7 +519,9 @@ export function App() {
                   <button
                     className="action-button"
                     disabled={
-                      submittingTask || currentTask.approval_status === "APPROVED"
+                      submittingTask ||
+                      currentTask.approval_status === "APPROVED" ||
+                      currentTask.approval_status === "REJECTED"
                     }
                     onClick={() => void updateTaskApproval("approve")}
                     type="button"
@@ -493,12 +531,38 @@ export function App() {
                   <button
                     className="action-button secondary"
                     disabled={
-                      submittingTask || currentTask.approval_status === "REJECTED"
+                      submittingTask ||
+                      currentTask.approval_status === "REJECTED" ||
+                      currentTask.approval_status === "APPROVED"
                     }
                     onClick={() => void updateTaskApproval("reject")}
                     type="button"
                   >
                     Reject Task
+                  </button>
+                  <button
+                    className="action-button"
+                    disabled={
+                      submittingTask ||
+                      currentTask.approval_status !== "APPROVED" ||
+                      currentTask.status !== "APPROVED"
+                    }
+                    onClick={() => void updateExecution("dispatch")}
+                    type="button"
+                  >
+                    Dispatch Task
+                  </button>
+                  <button
+                    className="action-button secondary"
+                    disabled={
+                      submittingTask ||
+                      currentTask.approval_status !== "APPROVED" ||
+                      currentTask.status !== "IN_EXECUTION"
+                    }
+                    onClick={() => void updateExecution("complete")}
+                    type="button"
+                  >
+                    Complete Task
                   </button>
                 </div>
               </div>
