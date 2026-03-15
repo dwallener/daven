@@ -1,4 +1,12 @@
-import { startTransition, useEffect, useState } from "react";
+import { startTransition, useEffect, useMemo, useState } from "react";
+import {
+  CircleMarker,
+  MapContainer,
+  TileLayer,
+  Tooltip,
+  useMap,
+  useMapEvents,
+} from "react-leaflet";
 
 type PointGeometry = {
   type: "Point";
@@ -118,6 +126,7 @@ const mapCenterLat = Number.parseFloat(
 const mapRadiusDegrees = Number.parseFloat(
   import.meta.env.VITE_MAP_RADIUS_DEGREES ?? "0.18",
 );
+const defaultMapZoom = Number.parseInt(import.meta.env.VITE_MAP_ZOOM ?? "11", 10);
 
 async function fetchJson<T>(url: string): Promise<T> {
   const response = await fetch(url);
@@ -197,23 +206,33 @@ function describeNextAction(target: Target | null, task: Task | null) {
   return "Review target state and continue the workflow.";
 }
 
-function projectToMap(location: PointGeometry, radiusDegrees: number) {
-  const [lng, lat] = location.coordinates;
-  const x = ((lng - mapCenterLng) / radiusDegrees + 1) * 50;
-  const y = (1 - (lat - mapCenterLat) / radiusDegrees) * 50;
-
-  return {
-    x: Math.min(96, Math.max(4, x)),
-    y: Math.min(96, Math.max(4, y)),
-  };
-}
-
 function isWithinMapAoi(location: PointGeometry, radiusDegrees: number) {
   const [lng, lat] = location.coordinates;
   return (
     Math.abs(lng - mapCenterLng) <= radiusDegrees &&
     Math.abs(lat - mapCenterLat) <= radiusDegrees
   );
+}
+
+function MapZoomController(props: {
+  zoom: number;
+  onZoomChange: (zoom: number) => void;
+}) {
+  const map = useMap();
+
+  useEffect(() => {
+    if (map.getZoom() !== props.zoom) {
+      map.setZoom(props.zoom);
+    }
+  }, [map, props.zoom]);
+
+  useMapEvents({
+    zoomend() {
+      props.onZoomChange(map.getZoom());
+    },
+  });
+
+  return null;
 }
 
 export function App() {
@@ -234,7 +253,7 @@ export function App() {
   const [loadingTasks, setLoadingTasks] = useState(false);
   const [loadingAssessments, setLoadingAssessments] = useState(false);
   const [submittingTask, setSubmittingTask] = useState(false);
-  const [mapZoom, setMapZoom] = useState(1.2);
+  const [mapZoom, setMapZoom] = useState(defaultMapZoom);
   const [serviceHealth, setServiceHealth] = useState<ServiceHealth[]>([
     { label: "Workflow", url: workflowApiUrl, status: "checking" },
     { label: "Assets", url: assetApiUrl, status: "checking" },
@@ -248,7 +267,7 @@ export function App() {
   const [assessmentConfidence, setAssessmentConfidence] = useState("0.92");
   const [assessmentNotes, setAssessmentNotes] = useState("");
   const [assessmentMediaRefs, setAssessmentMediaRefs] = useState("clip_001");
-  const mapRadius = mapRadiusDegrees / mapZoom;
+  const mapRadius = mapRadiusDegrees;
 
   async function loadBoard() {
     setLoadingBoard(true);
@@ -402,7 +421,10 @@ export function App() {
     label: target.title,
     highlighted: target.id === selectedTargetId,
     status: target.status,
-    point: projectToMap(target.location, mapRadius),
+    center: [target.location.coordinates[1], target.location.coordinates[0]] as [
+      number,
+      number,
+    ],
     inAoi: isWithinMapAoi(target.location, mapRadius),
   }));
   const mapAssets = assets.slice(0, 8).map((asset) => ({
@@ -411,7 +433,10 @@ export function App() {
     label: asset.callsign,
     highlighted: currentTask?.asset_ids.includes(asset.id) ?? false,
     status: asset.availability,
-    point: projectToMap(asset.location, mapRadius),
+    center: [asset.location.coordinates[1], asset.location.coordinates[0]] as [
+      number,
+      number,
+    ],
     inAoi: isWithinMapAoi(asset.location, mapRadius),
   }));
   const visibleTargetCount = mapTargets.filter((item) => item.inAoi).length;
@@ -420,8 +445,10 @@ export function App() {
   const hiddenAssetCount = mapAssets.length - visibleAssetCount;
 
   function adjustMapZoom(delta: number) {
-    setMapZoom((current) => Math.min(4, Math.max(0.8, current + delta)));
+    setMapZoom((current) => Math.min(15, Math.max(8, current + delta)));
   }
+
+  const mapCenter = useMemo<[number, number]>(() => [mapCenterLat, mapCenterLng], []);
 
   async function proposeTask() {
     if (!selectedTarget || !recommendation?.candidates[0]) {
@@ -562,35 +589,71 @@ export function App() {
             <div className="map-toolbar">
               <button
                 className="map-zoom-button"
-                onClick={() => adjustMapZoom(-0.2)}
+                onClick={() => adjustMapZoom(-1)}
                 type="button"
               >
                 -
               </button>
-              <span className="status-pill subtle">x{mapZoom.toFixed(1)}</span>
+              <span className="status-pill subtle">z{mapZoom}</span>
               <button
                 className="map-zoom-button"
-                onClick={() => adjustMapZoom(0.2)}
+                onClick={() => adjustMapZoom(1)}
                 type="button"
               >
                 +
               </button>
             </div>
           </header>
-          <div
-            className="map-frame"
-            onWheel={(event) => {
-              event.preventDefault();
-              adjustMapZoom(event.deltaY > 0 ? -0.15 : 0.15);
-            }}
-          >
-            <div className="map-backdrop" />
-            <div className="map-ring map-ring-a" />
-            <div className="map-ring map-ring-b" />
-            <div className="map-crosshair map-crosshair-h" />
-            <div className="map-crosshair map-crosshair-v" />
-            <div className="map-coast map-coast-main" />
-            <div className="map-coast map-coast-island" />
+          <div className="map-shell">
+            <MapContainer
+              center={mapCenter}
+              className="map-frame"
+              scrollWheelZoom
+              zoom={mapZoom}
+            >
+              <TileLayer
+                attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+              />
+              <MapZoomController onZoomChange={setMapZoom} zoom={mapZoom} />
+              {mapTargets.map((item) => (
+                <CircleMarker
+                  center={item.center}
+                  eventHandlers={{
+                    click: () => setSelectedTargetId(item.id),
+                  }}
+                  key={item.id}
+                  pathOptions={{
+                    color: item.highlighted ? "#fff8ef" : "#9c4d1c",
+                    fillColor: "#d6793f",
+                    fillOpacity: item.highlighted ? 1 : 0.85,
+                    weight: item.highlighted ? 3 : 2,
+                  }}
+                  radius={item.highlighted ? 10 : 8}
+                >
+                  <Tooltip direction="top" offset={[0, -8]} permanent={item.highlighted}>
+                    {item.label}
+                  </Tooltip>
+                </CircleMarker>
+              ))}
+              {mapAssets.map((item) => (
+                <CircleMarker
+                  center={item.center}
+                  key={item.id}
+                  pathOptions={{
+                    color: item.highlighted ? "#fff8ef" : "#73dbd2",
+                    fillColor: "#4bc2bc",
+                    fillOpacity: item.highlighted ? 1 : 0.75,
+                    weight: item.highlighted ? 3 : 2,
+                  }}
+                  radius={item.highlighted ? 9 : 7}
+                >
+                  <Tooltip direction="top" offset={[0, -8]} permanent={item.highlighted}>
+                    {item.label}
+                  </Tooltip>
+                </CircleMarker>
+              ))}
+            </MapContainer>
             <div className="map-center-label">
               Centered on Kharg Island
               <span>{mapCenterLat.toFixed(3)}, {mapCenterLng.toFixed(3)}</span>
@@ -599,26 +662,6 @@ export function App() {
               <span>{visibleTargetCount} targets in AOI</span>
               <span>{visibleAssetCount} assets in AOI</span>
             </div>
-            {mapTargets.filter((item) => item.inAoi).map((item) => (
-              <button
-                className={`map-marker ${item.kind}${item.highlighted ? " highlighted" : ""}`}
-                key={item.id}
-                onClick={() => setSelectedTargetId(item.id)}
-                style={{ left: `${item.point.x}%`, top: `${item.point.y}%` }}
-                type="button"
-              >
-                <span>{item.label}</span>
-              </button>
-            ))}
-            {mapAssets.filter((item) => item.inAoi).map((item) => (
-              <div
-                className={`map-marker ${item.kind}${item.highlighted ? " highlighted" : ""}`}
-                key={item.id}
-                style={{ left: `${item.point.x}%`, top: `${item.point.y}%` }}
-              >
-                <span>{item.label}</span>
-              </div>
-            ))}
             {hiddenTargetCount || hiddenAssetCount ? (
               <div className="map-offboard">
                 <p className="detail-label">Outside Kharg AOI</p>
