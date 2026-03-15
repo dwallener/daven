@@ -104,6 +104,42 @@ button {
   font-size: 0.9rem;
 }
 
+.health-strip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem;
+}
+
+.health-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.55rem 0.8rem;
+  border-radius: 999px;
+  background: rgba(17, 35, 50, 0.06);
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+
+.health-dot {
+  width: 0.7rem;
+  height: 0.7rem;
+  border-radius: 50%;
+  background: #94a3ad;
+}
+
+.health-dot.up {
+  background: #2d7d46;
+}
+
+.health-dot.down {
+  background: #a64127;
+}
+
+.health-dot.checking {
+  background: #8d6a21;
+}
+
 .main-grid {
   display: grid;
   gap: 1.5rem;

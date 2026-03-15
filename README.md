@@ -38,6 +38,36 @@ Current implemented scope:
 
 This repo is currently optimized for native local development on macOS.
 
+## Demo mode
+
+One-command native backend startup:
+
+```zsh
+./scripts/demo_up.sh
+```
+
+Stop all demo-started backend services:
+
+```zsh
+./scripts/demo_down.sh
+```
+
+Seed a ready-to-demo target and approved task:
+
+```zsh
+./scripts/seed_demo.sh
+```
+
+That script creates:
+
+- one detection
+- one nominated target
+- one strike-capable asset
+- one recommendation
+- one proposed and approved task
+
+So you can open the UI and drive dispatch, completion, and BDA from there.
+
 ## Database setup
 
 Create the local database once:

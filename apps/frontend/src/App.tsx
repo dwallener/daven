@@ -91,6 +91,12 @@ type Assessment = {
   media_refs: string[];
 };
 
+type ServiceHealth = {
+  label: string;
+  url: string;
+  status: "checking" | "up" | "down";
+};
+
 const workflowApiUrl =
   import.meta.env.VITE_WORKFLOW_API_URL ?? "http://127.0.0.1:3003";
 const assetApiUrl =
@@ -141,6 +147,14 @@ export function App() {
   const [loadingTasks, setLoadingTasks] = useState(false);
   const [loadingAssessments, setLoadingAssessments] = useState(false);
   const [submittingTask, setSubmittingTask] = useState(false);
+  const [serviceHealth, setServiceHealth] = useState<ServiceHealth[]>([
+    { label: "Workflow", url: workflowApiUrl, status: "checking" },
+    { label: "Assets", url: assetApiUrl, status: "checking" },
+    { label: "Recommend", url: recommendationApiUrl, status: "checking" },
+    { label: "Planning", url: planningApiUrl, status: "checking" },
+    { label: "Execution", url: executionApiUrl, status: "checking" },
+    { label: "Assess", url: assessmentApiUrl, status: "checking" },
+  ]);
   const [assessmentResult, setAssessmentResult] =
     useState<Assessment["result"]>("DESTROYED");
   const [assessmentConfidence, setAssessmentConfidence] = useState("0.92");
@@ -215,6 +229,45 @@ export function App() {
   useEffect(() => {
     void loadBoard();
     void loadAssets();
+  }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const pollHealth = async () => {
+      const next = await Promise.all(
+        serviceHealth.map(async ({ label, url }) => {
+          try {
+            const response = await fetch(`${url}/health`);
+            return {
+              label,
+              url,
+              status: response.ok ? "up" : "down",
+            } as ServiceHealth;
+          } catch {
+            return {
+              label,
+              url,
+              status: "down",
+            } as ServiceHealth;
+          }
+        }),
+      );
+
+      if (!cancelled) {
+        setServiceHealth(next);
+      }
+    };
+
+    void pollHealth();
+    const timer = window.setInterval(() => {
+      void pollHealth();
+    }, 5000);
+
+    return () => {
+      cancelled = true;
+      window.clearInterval(timer);
+    };
   }, []);
 
   useEffect(() => {
@@ -418,6 +471,14 @@ export function App() {
             <dd>{assessmentApiUrl}</dd>
           </div>
         </dl>
+        <div className="health-strip">
+          {serviceHealth.map((service) => (
+            <div className="health-chip" key={service.label}>
+              <span className={`health-dot ${service.status}`} />
+              <span>{service.label}</span>
+            </div>
+          ))}
+        </div>
       </section>
 
       <section className="main-grid">
